@@ -48,7 +48,6 @@ OUT_DIR.mkdir(exist_ok=True)
 REFAC_PICKLE = Path(__file__).parent / "figure6_three_lineage_data.pkl"
 LEGACY_PICKLE = first_existing_path(
     ROOT / "resources" / "figure6_three_lineage_data.pkl",
-    ROOT / "Figure6" / "pipeline" / "three_lineage_data.pkl",
 )
 
 # The manuscript top subpanels show these two markers per lineage.

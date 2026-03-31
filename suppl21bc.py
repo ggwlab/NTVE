@@ -75,10 +75,7 @@ FGSEA_DOCKER_DIR = ROOT / "resources" / "docker_fgsea"
 TOP_N_PER_DAY = 3
 
 RANKINGS_CSV = OUT_DATA / "all_gene_rankings_log2_centered.csv"
-DESEQ2_CSV = first_existing_path(
-    ROOT / "Suppl21" / "cardio_deseq2_cubicsplines_output" / "deseq2_results.csv",
-    ROOT / "Figure7" / "cardio_deseq2_cubicsplines_output" / "deseq2_results.csv",
-)
+DESEQ2_CSV = ROOT / "Figure7" / "cardio_deseq2_cubicsplines_output" / "deseq2_results.csv"
 GTF_PATH = ROOT / "resources" / "merged_gtf_homosapiens_v108_musmusculus_v109.csv.gz"
 
 PANEL_B_ROWS = [
@@ -131,6 +128,11 @@ def ensure_rankings() -> None:
 
 def export_rnk_files() -> None:
     print("Loading rankings and DESeq2 results...")
+    if not DESEQ2_CSV.exists():
+        raise FileNotFoundError(
+            "Missing cardio spline DESeq2 results. Run `fig7c_pipeline.py` first to generate "
+            f"{ROOT / 'Figure7' / 'cardio_deseq2_cubicsplines_output' / 'deseq2_results.csv'}."
+        )
     rankings = pd.read_csv(RANKINGS_CSV)
     deseq2_results = pd.read_csv(DESEQ2_CSV)
 
@@ -161,13 +163,9 @@ def export_rnk_files() -> None:
         print(f"  Day {tp}: {len(ranked_list)} genes → {out.name}")
 
     for name in ("c2.all.v2025.1.Hs.json", "c5.go.v2025.1.Hs.json"):
-        candidates = [
-            ROOT / "resources" / name,
-            ROOT / "Suppl21" / "fgsea_analysis" / "input" / name,
-        ]
-        src = next((path for path in candidates if path.exists()), None)
-        if src is None:
-            raise FileNotFoundError(f"Missing gene-set file: tried {candidates}")
+        src = ROOT / "resources" / name
+        if not src.exists():
+            raise FileNotFoundError(f"Missing gene-set file: {src}")
         shutil.copy(src, FGSEA_INPUT / name)
 
 

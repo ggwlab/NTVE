@@ -41,6 +41,7 @@ OUT_DIR = Path(__file__).parent / "4cde_output"
 TEMP_DIR = OUT_DIR / "deseq2_temp"
 QUANT_DIR = ROOT / "resources" / "quantfiles_filtered_pipeline" / "mus_musculus"
 LIMS_FILE = first_existing_path(
+    ROOT / "resources" / "figure4_Project_1716_lims_simplified.csv",
     ROOT / "resources" / "Project_1716_lims_simplified.csv",
     ROOT / "Figure4" / "Project_1716_lims_simplified.csv",
 )
@@ -172,6 +173,12 @@ def main() -> None:
         if parsed:
             sample_info[row["Sample_Name"]] = parsed
 
+    if not sample_info:
+        raise RuntimeError(
+            "No Figure 4 sample groups could be parsed from "
+            f"{LIMS_FILE}. Expected Sample_NameLIMS values like S1_R1_TP2."
+        )
+
     tp2_samples = [sid for sid, info in sample_info.items() if info["TimePoint"] == 2]
     tp3_samples = [sid for sid, info in sample_info.items() if info["TimePoint"] == 3]
 
@@ -181,6 +188,12 @@ def main() -> None:
         sample_tp3 = [s for s in tp3_samples if sample_info[s]["Sample"] == sample_num]
         if sample_tp2 and sample_tp3:
             comparisons[sample_num] = {"tp2": sample_tp2, "tp3": sample_tp3, "all_samples": sample_tp2 + sample_tp3}
+
+    if not comparisons:
+        raise RuntimeError(
+            "No TP2/TP3 Figure 4 comparisons were found in "
+            f"{LIMS_FILE}. Check that the dedicated Figure 4 LIMS metadata is staged."
+        )
 
     print(f"Preparing count matrices for {len(comparisons)} sample groups...")
 
@@ -233,7 +246,7 @@ def main() -> None:
         sample_temp_dir = TEMP_DIR / f"sample{sample_num}"
         sample_temp_dir.mkdir(exist_ok=True, parents=True)
         sample_output_dir = OUT_DIR / f"sample{sample_num}"
-        sample_output_dir.mkdir(exist_ok=True)
+        sample_output_dir.mkdir(exist_ok=True, parents=True)
 
         count_df.to_csv(sample_temp_dir / "count_matrix.csv")
         metadata_df.to_csv(sample_temp_dir / "sample_metadata.csv", index=False)

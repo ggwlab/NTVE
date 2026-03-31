@@ -30,23 +30,12 @@ def find_root() -> Path:
             return candidate
     return here.parent.parent
 
-
-def first_existing_path(*candidates: Path) -> Path:
-    for candidate in candidates:
-        if candidate.exists():
-            return candidate
-    return candidates[0]
-
-
 ROOT = find_root()
 OUT_DIR = Path(__file__).parent / "fig7c_plots"
 OUT_DIR.mkdir(exist_ok=True)
 
 GTF_PATH = ROOT / "resources" / "merged_gtf_homosapiens_v108_musmusculus_v109.csv.gz"
-TRAJECTORIES_CSV = first_existing_path(
-    ROOT / "Figure7" / "cardio_deseq2_cubicsplines_output" / "fitted_trajectories_all_genes.csv",
-    ROOT / "Suppl21" / "cardio_deseq2_cubicsplines_output" / "fitted_trajectories_all_genes.csv",
-)
+TRAJECTORIES_CSV = ROOT / "Figure7" / "cardio_deseq2_cubicsplines_output" / "fitted_trajectories_all_genes.csv"
 
 plt.rcParams["svg.fonttype"] = "none"
 plt.rcParams["font.size"] = 8
@@ -65,6 +54,11 @@ gene_name_to_id = {v: k for k, v in gene_id_to_name.items()}
 
 # --- Load and transform trajectories ---
 print("Loading trajectories...")
+if not TRAJECTORIES_CSV.exists():
+    raise FileNotFoundError(
+        "Missing fitted cardio trajectories. Run `fig7c_pipeline.py` first to generate "
+        f"{ROOT / 'Figure7' / 'cardio_deseq2_cubicsplines_output' / 'fitted_trajectories_all_genes.csv'}."
+    )
 trajectories = pd.read_csv(TRAJECTORIES_CSV)
 print(f"  {trajectories['Gene'].nunique()} genes, "
       f"timepoints: {sorted(trajectories['Time'].unique())}")

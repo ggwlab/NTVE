@@ -17,7 +17,7 @@ STAGE_ROOT="${TMPDIR:-/tmp}/ntve_refactor_stage_${STAMP}"
 STAGED_REPO="${STAGE_ROOT}/repo"
 STAGED_LOG_DIR="${STAGE_ROOT}/logs"
 MPLCONFIGDIR_STAGE="${STAGE_ROOT}/mplconfig"
-PYTHONPATH_STAGE="${STAGED_REPO}/resources/ntvetools:${STAGED_REPO}:${PYTHONPATH:-}"
+PYTHONPATH_STAGE="${STAGED_REPO}:${PYTHONPATH:-}"
 
 PRESERVE_ROOT="${REPO_ROOT}/staged_runs/${STAMP}"
 RUN_LOG="${PRESERVE_ROOT}/run.log"
@@ -51,6 +51,8 @@ SCRIPT_FILES=(
   "fig7c_extract_curves.R"
   "fig7c_pipeline.py"
   "fig7c_prepare_inputs.py"
+  "run_deseq2_analysis.R"
+  "rediscovery_analysis_lib.py"
   "refactoring_roadmap_figure2_shared.py"
   "suppl10.py"
   "suppl11a.py"
@@ -75,6 +77,7 @@ SCRIPT_FILES=(
   "suppl6_data.py"
   "suppl6ab.py"
   "suppl8ab.py"
+  "ntvetools"
 )
 
 REFERENCE_INPUTS=(
@@ -83,19 +86,24 @@ REFERENCE_INPUTS=(
   "resources/harmonized_harmonized_gene_counts_rv_stranded.txt"
   "resources/comparison_harmonized_gene_counts.txt.gz"
   "resources/Sample_barcode.csv"
+  "resources/figure4_Project_1716_lims_simplified.csv"
   "resources/Project_1716_lims_simplified_Spam2_deleted.csv"
   "resources/Project_1716_lims_simplified_Spam2_without_missing.csv"
   "resources/c2.all.v2025.1.Hs.json"
   "resources/c5.go.v2025.1.Hs.json"
-  "resources/ntvetools"
   "resources/docker_cubic_splines"
   "resources/docker_DeSeq_with_Shrinkage"
   "resources/docker_fgsea"
 )
 
 STAGED_INPUT_MAPPINGS=(
-  "ntvetools|ntvetools"
-  "resources/Project_1716_lims_simplified.csv|Figure4/Project_1716_lims_simplified.csv"
+  "resources/figure4_Project_1716_lims_simplified.csv|Figure4/Project_1716_lims_simplified.csv"
+  "resources/suppl14|Suppl14"
+  "resources/suppl20/blast_samples|Suppl20/blast_samples"
+  "resources/suppl20/blast_results|Suppl20/blast_results"
+  "resources/sup5_comparison_data|Suppl5/comparison_data"
+  "resources/sup5_comparison_data|Suppl10/comparison_data"
+  "resources/cardio_data.pkl|Suppl21/cardio_data.pkl"
   "resources/fig3/Dox_vs_IFNg_lysate_base_mean_gt_0.csv|Figure3/Dox_vs_IFNg_lysate_base_mean_gt_0.csv"
   "resources/fig3/Dox_vs_IFNg_SN_base_mean_gt_0.csv|Figure3/Dox_vs_IFNg_SN_base_mean_gt_0.csv"
   "resources/fig3/greaterAbs_Dox_vs_IFNg_lysate_base_mean_gt_0.csv|Figure3/greaterAbs_Dox_vs_IFNg_lysate_base_mean_gt_0.csv"
@@ -112,8 +120,15 @@ PRIMARY_DATA_INPUTS=(
 )
 
 PRECOMPUTED_UPSTREAM_INPUTS=(
+  "resources/cardio_data.pkl"
   "resources/coverage_arrays"
   "resources/data_dict.joblib"
+  "resources/fig3"
+  "resources/figure6_three_lineage_data.pkl"
+  "resources/gsea_ifn-gamma"
+  "resources/suppl14"
+  "resources/suppl20"
+  "resources/sup5_comparison_data"
   "resources/transcript_coverage.db"
 )
 
@@ -169,7 +184,11 @@ write_manifest() {
     echo
     echo "Scripts copied:"
     for item in "${SCRIPT_FILES[@]}"; do
-      echo "  - ${item} -> refactoring_roadmap/${item}"
+      if [ "${item}" = "ntvetools" ] || [ "${item}" = "rediscovery_analysis_lib.py" ]; then
+        echo "  - ${item} -> ${item}"
+      else
+        echo "  - ${item} -> refactoring_roadmap/${item}"
+      fi
     done
     echo
     echo "Reference inputs copied:"
@@ -217,8 +236,13 @@ copy_file_to_stage() {
   local src_rel="$1"
   local dst_rel="$2"
   require_path "${src_rel}"
-  mkdir -p "${STAGED_REPO}/$(dirname "${dst_rel}")"
-  rsync -a "${REPO_ROOT}/${src_rel}" "${STAGED_REPO}/${dst_rel}"
+  if [ -d "${REPO_ROOT}/${src_rel}" ]; then
+    mkdir -p "${STAGED_REPO}/${dst_rel}"
+    rsync -a "${REPO_ROOT}/${src_rel}/" "${STAGED_REPO}/${dst_rel}/"
+  else
+    mkdir -p "${STAGED_REPO}/$(dirname "${dst_rel}")"
+    rsync -a "${REPO_ROOT}/${src_rel}" "${STAGED_REPO}/${dst_rel}"
+  fi
 }
 
 copy_into_stage() {
@@ -227,7 +251,11 @@ copy_into_stage() {
 
   local script
   for script in "${SCRIPT_FILES[@]}"; do
-    copy_file_to_stage "${script}" "refactoring_roadmap/${script}"
+    if [ "${script}" = "ntvetools" ] || [ "${script}" = "rediscovery_analysis_lib.py" ]; then
+      copy_file_to_stage "${script}" "${script}"
+    else
+      copy_file_to_stage "${script}" "refactoring_roadmap/${script}"
+    fi
   done
 
   local path

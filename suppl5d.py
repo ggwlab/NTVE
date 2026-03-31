@@ -17,7 +17,6 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(ROOT / "resources" / "ntvetools"))
 
 from ntvetools import load_gtf_df
 

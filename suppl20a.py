@@ -22,8 +22,23 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).parent.parent
-BLAST_DIR = ROOT / "Suppl20" / "blast_samples"
-BLAST_RESULTS_DIR = ROOT / "Suppl20" / "blast_results"
+
+
+def first_existing_dir(*candidates: Path) -> Path:
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
+
+
+BLAST_DIR = first_existing_dir(
+    ROOT / "resources" / "suppl20" / "blast_samples",
+    ROOT / "Suppl20" / "blast_samples",
+)
+BLAST_RESULTS_DIR = first_existing_dir(
+    ROOT / "resources" / "suppl20" / "blast_results",
+    ROOT / "Suppl20" / "blast_results",
+)
 OUT_DIR = Path(__file__).parent / "suppl20a_plots"
 OUT_DIR.mkdir(exist_ok=True)
 SUMMARY_CSV = OUT_DIR / "suppl20a_quality_comparison_summary.csv"
@@ -111,6 +126,12 @@ def save(fig: plt.Figure, stem: str) -> None:
 
 samples = load_samples()
 print(f"Samples found: {samples}")
+
+if not samples:
+    raise FileNotFoundError(
+        "No Suppl20 BLAST comparison samples were found. "
+        f"Checked {BLAST_DIR} and {BLAST_RESULTS_DIR}."
+    )
 
 rows = []
 canonical_sample = None

@@ -29,19 +29,8 @@ def find_root() -> Path:
             return candidate
     return here.parent.parent
 
-
-def first_existing_path(*candidates: Path) -> Path:
-    for candidate in candidates:
-        if candidate.exists():
-            return candidate
-    return candidates[0]
-
-
 ROOT = find_root()
-TRAJ_CSV = first_existing_path(
-    ROOT / "Suppl21" / "cardio_deseq2_cubicsplines_output" / "fitted_trajectories_all_genes.csv",
-    ROOT / "Figure7" / "cardio_deseq2_cubicsplines_output" / "fitted_trajectories_all_genes.csv",
-)
+TRAJ_CSV = ROOT / "Figure7" / "cardio_deseq2_cubicsplines_output" / "fitted_trajectories_all_genes.csv"
 OUT_DATA = Path(__file__).parent / "suppl21bc_output"
 OUT_PLOTS = Path(__file__).parent / "suppl21bc_plots"
 OUT_DATA.mkdir(exist_ok=True)
@@ -82,6 +71,11 @@ def create_rankings_for_timepoint_all_genes(timepoint: int, obs_log_centered: pd
 
 
 print("Loading fitted trajectories...")
+if not TRAJ_CSV.exists():
+    raise FileNotFoundError(
+        "Missing fitted cardio trajectories. Run `fig7c_pipeline.py` first to generate "
+        f"{ROOT / 'Figure7' / 'cardio_deseq2_cubicsplines_output' / 'fitted_trajectories_all_genes.csv'}."
+    )
 trajectories = pd.read_csv(TRAJ_CSV)
 print(f"  Total genes: {trajectories['Gene'].nunique()}")
 print(f"  Timepoints: {sorted(trajectories['Time'].unique())}")

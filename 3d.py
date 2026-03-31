@@ -14,12 +14,17 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 OUT_DIR = Path(__file__).parent / "3d_plots"
 OUT_DIR.mkdir(exist_ok=True)
-FIG3 = ROOT / "Figure3"
+NTVE_GSEA = ROOT / "resources" / "gsea_ifn-gamma" / "ntve" / "gsea_report_for_na_pos_1727164795980.tsv"
+LYSATE_GSEA = ROOT / "resources" / "gsea_ifn-gamma" / "lysate" / "gsea_report_for_na_pos_1727164776729.tsv"
 
 # ── Load GSEA outputs ─────────────────────────────────────────────────────────
 # Positive enrichment for NTVE and Lysate
-pos_ntve   = pd.read_csv(sorted((FIG3 / "IFN-gamma_SN.GseaPreranked.1727164795980").glob("gsea_report_for_na_pos*.tsv"))[0], sep='\t')
-pos_lysate = pd.read_csv(sorted((FIG3 / "IFN-gamma_lysate.GseaPreranked.1727164776729").glob("gsea_report_for_na_pos*.tsv"))[0], sep='\t')
+if not NTVE_GSEA.exists() or not LYSATE_GSEA.exists():
+    raise FileNotFoundError(
+        "Missing precomputed IFN-gamma GSEA reports under resources/gsea_ifn-gamma."
+    )
+pos_ntve = pd.read_csv(NTVE_GSEA, sep="\t")
+pos_lysate = pd.read_csv(LYSATE_GSEA, sep="\t")
 
 top_n = 15
 ntve_top   = pos_ntve.sort_values("FDR q-val").head(top_n).set_index("NAME")[["NES","FDR q-val"]]

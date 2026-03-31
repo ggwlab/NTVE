@@ -17,11 +17,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 ROOT = Path(__file__).parent.parent
-FIG2 = ROOT / "Figure2"
 OUT_DIR = Path(__file__).parent / "2b_plots"
 OUT_DIR.mkdir(exist_ok=True)
 
-sys.path.insert(0, str(FIG2))
 sys.path.insert(0, str(ROOT))
 
 from ntvetools import load_gtf_df

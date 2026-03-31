@@ -36,7 +36,8 @@ def run(cmd: list[str], cwd: Path | None = None) -> None:
 
 
 def main() -> None:
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    INPUT_DIR.mkdir(parents=True, exist_ok=True)
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     print("=== Step 1: Prepare spline-model inputs ===")
     run([sys.executable, str(SCRIPTS_DIR / "fig7c_prepare_inputs.py")])

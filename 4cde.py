@@ -146,17 +146,22 @@ def create_volcano_plot(results_df, sample_num, output_dir,
 def main():
     results_dir = Path(__file__).parent / "4cde_output"
     all_results = {}
+    missing_samples = []
     
     for sample_num in [2, 3, 4]:
         csv_path = results_dir / f"sample{sample_num}" / "deseq2_results.csv"
         if csv_path.exists():
             all_results[sample_num] = pd.read_csv(csv_path)
         else:
-            print(f"Warning: Results for Sample {sample_num} not found at {csv_path}")
+            missing_samples.append((sample_num, csv_path))
 
-    if not all_results:
-        print("No results found. Exiting.")
-        return
+    if missing_samples:
+        missing_msg = "\n".join(f"  - Sample {sample_num}: {path}" for sample_num, path in missing_samples)
+        raise FileNotFoundError(
+            "Missing Figure 4 DESeq2 outputs required for manuscript panels:\n"
+            f"{missing_msg}\n"
+            "Run `figure4_prepare_deseq2.py` successfully first."
+        )
 
     # Calculate consistent axis limits as in notebook
     all_log2fc = []

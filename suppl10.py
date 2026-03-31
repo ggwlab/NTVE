@@ -25,11 +25,18 @@ from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
 
 ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(ROOT / "resources" / "ntvetools"))
 
 from ntvetools import load_gtf_df
 
-DATA_DIR = ROOT / "Suppl10" / "comparison_data"
+
+def first_existing_dir(*candidates: Path) -> Path:
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
+
+
+DATA_DIR = first_existing_dir(ROOT / "resources" / "sup5_comparison_data", ROOT / "Suppl10" / "comparison_data")
 OUT_DIR = Path(__file__).parent / "suppl10_plots"
 CSV_DIR = Path(__file__).parent / "suppl10_csv"
 OUT_DIR.mkdir(exist_ok=True)

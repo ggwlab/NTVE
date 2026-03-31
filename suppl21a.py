@@ -25,7 +25,8 @@ from matplotlib.gridspec import GridSpec
 ROOT = Path(__file__).parent.parent
 OUT_DIR = Path(__file__).parent / "suppl21a_plots"
 OUT_DIR.mkdir(exist_ok=True)
-CARDIO_PKL = ROOT / "Suppl21" / "cardio_data.pkl"
+
+CARDIO_PKL = ROOT / "resources" / "cardio_data.pkl"
 
 MESODERM_MARKERS = ["TBXT", "PDGFRA", "MESP1", "HAND1", "CDH2", "HAND2"]
 CARDIAC_MARKERS = ["NKX2-5", "ACTN2", "TNNT2"]
@@ -42,6 +43,10 @@ def save(fig: plt.Figure, stem: str) -> None:
 
 def load_marker_matrix() -> pd.DataFrame:
     print("Loading cardio_data.pkl ...")
+    if not CARDIO_PKL.exists():
+        raise FileNotFoundError(
+            f"Missing cardio marker input. Expected {ROOT / 'resources' / 'cardio_data.pkl'}."
+        )
     with open(CARDIO_PKL, "rb") as handle:
         data = pickle.load(handle)
 

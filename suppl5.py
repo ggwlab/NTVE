@@ -23,14 +23,21 @@ import pandas as pd
 from scipy.stats import t
 
 ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(ROOT / "resources" / "ntvetools"))
 
 from ntvetools import load_gtf_df
 
 OUT_DIR = Path(__file__).parent / "suppl5_plots"
 OUT_DIR.mkdir(exist_ok=True)
 
-S5_DATA = ROOT / "Suppl5" / "comparison_data"
+
+def first_existing_dir(*candidates: Path) -> Path:
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
+
+
+S5_DATA = first_existing_dir(ROOT / "resources" / "sup5_comparison_data", ROOT / "Suppl5" / "comparison_data")
 COV_DATA = ROOT / "resources" / "coverage_arrays"
 GTF_PATH = ROOT / "resources" / "merged_gtf_homosapiens_v108_musmusculus_v109.csv.gz"
 

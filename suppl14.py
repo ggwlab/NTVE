@@ -28,7 +28,7 @@ from ntvetools import load_gtf_df
 
 OUT_DIR = Path(__file__).parent / "suppl14_plots"
 OUT_DIR.mkdir(exist_ok=True)
-S14 = ROOT / "Suppl14"
+S14 = ROOT / "resources" / "suppl14"
 
 gtf = load_gtf_df(str(ROOT / "resources/merged_gtf_homosapiens_v108_musmusculus_v109.csv.gz"))
 gene_id_to_name = gtf["gene_id_to_name"]
@@ -36,7 +36,13 @@ gene_id_to_gene_biotype = gtf["gene_id_to_biotype"]
 
 
 def load_deseq(fname: str, suffix: str) -> pd.DataFrame:
-    df = pd.read_csv(S14 / fname)
+    csv_path = S14 / fname
+    if not csv_path.exists():
+        raise FileNotFoundError(
+            f"Missing Suppl14 DESeq2 input: {csv_path}. "
+            "Expected canonical static inputs under resources/suppl14/."
+        )
+    df = pd.read_csv(csv_path)
     df.rename(columns={df.columns[0]: "GeneID", "Geneid": "GeneID"}, inplace=True)
     keep = ["GeneID", "baseMean", "log2FoldChange", "lfcSE", "stat", "pvalue", "padj"]
     keep = [c for c in keep if c in df.columns]

@@ -1,0 +1,7 @@
+Sample,Condition,TimePoint,Sample_Num,Replicate
+25L007990,Reference,2,1,1
+25L007991,Reference,2,1,2
+25L007992,Reference,2,1,3
+25L008002,Target,3,1,1
+25L008003,Target,3,1,2
+25L008004,Target,3,1,3

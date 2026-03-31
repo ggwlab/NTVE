@@ -226,14 +226,9 @@ def export_fgsea_rank_files(rankings: pd.DataFrame) -> None:
     FGSEA_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     for name in ["c2.all.v2025.1.Hs.json", "c5.go.v2025.1.Hs.json"]:
-        candidates = [
-            ROOT / "resources" / name,
-            ROOT / "Figure7" / "deseq2_2vs2_causal_output" / "fgsea_analysis" / "input" / name,
-            ROOT / "Suppl21" / "fgsea_analysis" / "input" / name,
-        ]
-        src = next((path for path in candidates if path.exists()), None)
-        if src is None:
-            raise FileNotFoundError(f"Missing gene-set file: tried {candidates}")
+        src = ROOT / "resources" / name
+        if not src.exists():
+            raise FileNotFoundError(f"Missing gene-set file: {src}")
         dst = FGSEA_INPUT_DIR / name
         if src.resolve() != dst.resolve():
             shutil.copy(src, dst)

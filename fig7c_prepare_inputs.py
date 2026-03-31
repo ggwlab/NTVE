@@ -14,7 +14,8 @@ from pathlib import Path
 from fig7_shared import ROOT, build_cardio_count_matrix
 
 OUT_DIR = ROOT / "Figure7" / "cardio_deseq2_cubicsplines_input"
-OUT_DIR.mkdir(exist_ok=True)
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+RUN_SCRIPT = Path(__file__).with_name("run_deseq2_analysis.R")
 
 
 def main() -> None:
@@ -23,15 +24,18 @@ def main() -> None:
 
     count_path = OUT_DIR / "count_matrix.csv"
     metadata_path = OUT_DIR / "sample_metadata.csv"
+    run_script_path = OUT_DIR / "run_deseq2_analysis.R"
 
     count_matrix.to_csv(count_path)
     sample_metadata.to_csv(metadata_path, index=False)
+    run_script_path.write_text(RUN_SCRIPT.read_text())
 
     print(f"Saved: {count_path}")
     print(f"  Genes: {count_matrix.shape[0]}, Samples: {count_matrix.shape[1]}")
     print(f"Saved: {metadata_path}")
     print(f"  Timepoints: {sample_metadata['Time'].nunique()}")
     print(f"  Replicates per timepoint: {sorted(sample_metadata.groupby('Time').size().unique())}")
+    print(f"Saved: {run_script_path}")
 
 
 if __name__ == "__main__":
