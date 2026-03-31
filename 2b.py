@@ -19,6 +19,8 @@ import pandas as pd
 ROOT = Path(__file__).parent.parent
 OUT_DIR = Path(__file__).parent / "2b_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "2b_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 sys.path.insert(0, str(ROOT))
 
@@ -198,6 +200,21 @@ analysis_types_elo = [("Lysate", "SN", "bottom"), ("Lysate", "SN", "top"), ("SN"
 
 print("Running benchmarking comparison per-sample rediscovery analysis (local ranking)...")
 elo_local_results = run_per_sample_analysis(elo_organized, gene_df_elo_pc, sample_name_mapping, "Lysate", "SN")
+curve_rows = []
+for sample_num, sample_results in elo_local_results.items():
+    for analysis_key, result in sample_results.items():
+        for quantile, rate in zip(result["quantiles"], result["rates"]):
+            curve_rows.append(
+                {
+                    "sample_num": sample_num,
+                    "sample_label": get_sample_display_name("Benchmarking", sample_num),
+                    "analysis": analysis_key,
+                    "quantile": quantile,
+                    "rediscovery_rate": rate,
+                    "auc": result["auc"],
+                }
+            )
+pd.DataFrame(curve_rows).to_csv(CSV_DIR / "2b_benchmarking_local_ranking_curves.csv", index=False)
 fig = plot_top_row_local_ranking(elo_local_results, analysis_types_elo, elo_colors, "Benchmarking", elo_linestyles, elo_linewidths)
 save_plot(fig, "2b_benchmarking_local_ranking_toprow")
 plt.close(fig)

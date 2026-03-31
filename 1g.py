@@ -5,6 +5,7 @@ Outputs to: refactoring_roadmap/1g_plots/
 """
 
 import numpy as np
+import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -21,6 +22,8 @@ HARMONIZED_COUNTS_FILE = ROOT / "resources/harmonized_harmonized_gene_counts_rv_
 GTF_FILE               = ROOT / "resources/merged_gtf_homosapiens_v108_musmusculus_v109.csv.gz"
 OUT_DIR = Path(__file__).parent / "1g_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "1g_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 # Three matched SN / Lysate replicate pairs
 SAMPLE_PAIRS = [
@@ -42,6 +45,7 @@ print(f"  {len(rpm_df)} genes")
 
 # ── Enrichment per replicate pair ─────────────────────────────────────────────
 log_enrichments_list = []
+raw_rows = []
 
 for sn_list, lys_list in SAMPLE_PAIRS:
     # Keep only genes with RPM >= 1 in the lysate replicate
@@ -62,6 +66,14 @@ for sn_list, lys_list in SAMPLE_PAIRS:
     log_ef = np.log10(ef)
     log_ef = log_ef[np.isfinite(log_ef)]
     log_enrichments_list.append(log_ef)
+    raw_rows.extend(
+        {
+            "sn_sample": sn_list[0],
+            "lysate_sample": lys_list[0],
+            "log10_enrichment_factor": value,
+        }
+        for value in log_ef
+    )
     print(f"  {sn_list[0]} vs {lys_list[0]}: {len(log_ef):,} protein-coding genes")
 
 # ── Plot ──────────────────────────────────────────────────────────────────────
@@ -77,6 +89,17 @@ densities = np.array([
 ])
 mean_d = densities.mean(axis=0)
 se_d   = densities.std(axis=0, ddof=1) / np.sqrt(len(densities))
+pd.DataFrame(raw_rows).to_csv(CSV_DIR / "1g_enrichment_raw_values.csv", index=False)
+pd.DataFrame(
+    {
+        "bin_center": centers,
+        "n_replicates": len(densities),
+        "mean_density": mean_d,
+        "se_density": se_d,
+        "ci95_lower": mean_d - 1.96 * se_d,
+        "ci95_upper": mean_d + 1.96 * se_d,
+    }
+).to_csv(CSV_DIR / "1g_enrichment_distribution_curve.csv", index=False)
 
 fig, ax = plt.subplots(figsize=(4, 3))
 ax.plot(centers, mean_d, color="#1f77b4", lw=1.5, label=f"Mean (n=3 replicates)")

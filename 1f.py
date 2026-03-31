@@ -26,6 +26,8 @@ HARMONIZED_COUNTS_FILE = ROOT / "resources/harmonized_harmonized_gene_counts_rv_
 GTF_FILE = ROOT / "resources/merged_gtf_homosapiens_v108_musmusculus_v109.csv.gz"
 OUT_DIR = Path(__file__).parent / "1f_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "1f_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 SN_SAMPLES     = ['24L006479', '24L006480', '24L006481']
 LYSATE_SAMPLES = ['24L006460', '24L006461', '24L006462']
@@ -57,6 +59,11 @@ plt.rc("font", size=8)
 
 def log10p(x):
     return np.log10(x + 1e-3)
+
+df["plot_class"] = np.where(df["is_mt"], "MT-encoded", np.where(df["is_protein_coding"], "Protein-coding", "Noncoding"))
+df["log10_lys_avg"] = log10p(df["lys_avg"])
+df["log10_sn_avg"] = log10p(df["sn_avg"])
+df.to_csv(CSV_DIR / "1f_scatter_points.csv", index_label="GeneID")
 
 mt_mask    = df["is_mt"]
 pc_mask    = df["is_protein_coding"] & ~df["is_mt"]

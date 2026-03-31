@@ -20,6 +20,8 @@ import pandas as pd
 
 OUT_DIR = Path(__file__).parent / "suppl6_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "suppl6_csv"
+CSV_DIR.mkdir(exist_ok=True)
 MATRIX_FILE = OUT_DIR / "suppl6_cm_tpm_matrix.csv"
 
 plt.rcParams["svg.fonttype"] = "none"
@@ -136,11 +138,44 @@ for enrs in all_enrichments.values():
     global_ylim = max(global_ylim, float(np.max(ci_upper)))
 
 # Plot panels
+raw_rows = []
+curve_rows = []
 for panel, cfg in PANELS.items():
+    for rep_idx, enrichment_values in enumerate(all_enrichments[panel], start=1):
+        raw_rows.extend(
+            {
+                "panel": panel,
+                "stem": cfg["stem"],
+                "replicate_pair": rep_idx,
+                "log10_export_ratio": value,
+            }
+            for value in enrichment_values
+        )
+    densities = np.array(
+        [np.histogram(e, bins=global_bins, density=True)[0] for e in all_enrichments[panel] if len(e) > 0]
+    )
+    centers = (global_bins[:-1] + global_bins[1:]) / 2
+    mean_d = np.mean(densities, axis=0)
+    se_d = np.std(densities, axis=0, ddof=1) / np.sqrt(len(densities))
+    curve_rows.extend(
+        {
+            "panel": panel,
+            "stem": cfg["stem"],
+            "n_replicates": len(densities),
+            "bin_center": center,
+            "mean_density": mean,
+            "se_density": se,
+            "ci95_lower": mean - 1.96 * se,
+            "ci95_upper": mean + 1.96 * se,
+        }
+        for center, mean, se in zip(centers, mean_d, se_d)
+    )
     fig = plot_enrichment(
         all_enrichments[panel], cfg["title"], global_bins, global_ylim * 1.05
     )
     save_plot(fig, cfg["stem"])
     plt.close(fig)
 
+pd.DataFrame(raw_rows).to_csv(CSV_DIR / "suppl6_export_ratio_raw_values.csv", index=False)
+pd.DataFrame(curve_rows).to_csv(CSV_DIR / "suppl6_export_ratio_curve_summary.csv", index=False)
 print("Done.")

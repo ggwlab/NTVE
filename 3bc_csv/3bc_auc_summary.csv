@@ -1,0 +1,3 @@
+condition,dataset,roc_auc,pr_auc
+IFNg,original,0.9526023219205035,0.8086497787599058
+IFNg,downsampled,0.9442567567567568,0.9535724305153834

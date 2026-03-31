@@ -18,6 +18,8 @@ ROOT = Path(__file__).parent.parent
 DATA_DIR = get_generated_figure2_loaded_dir()
 OUT_DIR = Path(__file__).parent / "2a_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "2a_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 PLOT_FONT_SIZE = 8
 PLOT_WIDTH = 3.5
@@ -71,6 +73,9 @@ stats_df["Condition"] = pd.Categorical(
     ordered=True,
 )
 stats_df = stats_df.sort_values("Condition")
+stats_df["n_replicates"] = stats_df["Condition"].map(mgl_plot_df.groupby("Condition").size())
+mgl_plot_df.to_csv(CSV_DIR / "2a_total_rna_amount_points.csv", index=False)
+stats_df.to_csv(CSV_DIR / "2a_total_rna_amount_summary.csv", index=False)
 
 fig, ax = plt.subplots(figsize=(PLOT_WIDTH * 0.75, PLOT_HEIGHT))
 x_pos = np.arange(len(stats_df))

@@ -14,6 +14,8 @@ import pandas as pd
 ROOT = Path(__file__).parent.parent
 OUT_DIR = Path(__file__).parent / "5b_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "5b_csv"
+CSV_DIR.mkdir(exist_ok=True)
 COUNTS_FILE = ROOT / "resources/harmonized_harmonized_gene_counts_rv_stranded.txt"
 
 MAPPING = {
@@ -39,6 +41,23 @@ hek_samples = ["24L010910", "24L010911", "24L010912"]
 n2a_samples = ["24L010907", "24L010908", "24L010909"]
 hek_data = [[gene_level_df_rpm_homo[sample].sum(), gene_level_df_rpm_mus[sample].sum()] for sample in hek_samples]
 n2a_data = [[gene_level_df_rpm_homo[sample].sum(), gene_level_df_rpm_mus[sample].sum()] for sample in n2a_samples]
+pie_rows = []
+for sample in hek_samples + n2a_samples:
+    human_sum = gene_level_df_rpm_homo[sample].sum()
+    mouse_sum = gene_level_df_rpm_mus[sample].sum()
+    total = human_sum + mouse_sum
+    for species, value in [("Human", human_sum), ("Mouse", mouse_sum)]:
+        pie_rows.append(
+            {
+                "sample_id": sample,
+                "sample_label": MAPPING[sample],
+                "species": species,
+                "rpm_sum": value,
+                "fraction": value / total if total else 0.0,
+                "percent": (value / total * 100.0) if total else 0.0,
+            }
+        )
+pd.DataFrame(pie_rows).to_csv(CSV_DIR / "5b_species_distribution.csv", index=False)
 
 plt.rcParams.update({"svg.fonttype": "none", "font.family": "Arial", "font.size": 8})
 pie_diameter_inches = 23 / 25.4

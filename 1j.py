@@ -19,6 +19,8 @@ from ntvetools import load_gtf_df
 
 OUT_DIR = Path(__file__).parent / "1j_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "1j_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 GTF_FILE = ROOT / "resources/merged_gtf_homosapiens_v108_musmusculus_v109.csv.gz"
 QUANT_GLOB = str(ROOT / "resources/salmon_harmonized/*/quant.sf.gz")
@@ -78,6 +80,7 @@ groups = [
     ('gag:PABP', GAG_PABP_SAMPLES, '#76c7dc'),
     ('Reference', POLYA_REFERENCE_COLS, '#888888'),
 ]
+summary_rows = []
 
 fig = plt.figure(figsize=(5, 5))
 ax = fig.add_axes([0.2, 0.2, axes_size_in/5, axes_size_in/5])
@@ -87,7 +90,19 @@ for label, cols, color in groups:
     if not avail_cols:
         continue
     means = human_tpm_filtered.groupby('length_category', observed=False)[avail_cols].mean().mean(axis=1)
+    stds = human_tpm_filtered.groupby('length_category', observed=False)[avail_cols].mean().std(axis=1, ddof=1)
     stderr = human_tpm_filtered.groupby('length_category', observed=False)[avail_cols].sem().mean(axis=1)
+    summary_rows.extend(
+        {
+            "group": label,
+            "length_category": category,
+            "n_replicates": len(avail_cols),
+            "mean_tpm": mean,
+            "std_tpm": std,
+            "stderr_tpm": err,
+        }
+        for category, mean, std, err in zip(LABELS, means, stds, stderr)
+    )
     ax.errorbar(range(len(LABELS)), means, yerr=stderr,
                 label=label, color=color, marker='o', capsize=5, markersize=3)
     if label == 'Reference':
@@ -99,6 +114,7 @@ ref_avail  = [c for c in POLYA_REFERENCE_COLS if c in human_tpm_filtered.columns
 pabp_means = human_tpm_filtered.groupby('length_category', observed=False)[pabp_avail].mean().mean(axis=1)
 ref_means  = human_tpm_filtered.groupby('length_category', observed=False)[ref_avail].mean().mean(axis=1)
 r, p = stats.pearsonr(pabp_means, ref_means)
+pd.DataFrame(summary_rows).to_csv(CSV_DIR / "1j_length_resolved_summary.csv", index=False)
 ax.text(0.05, 0.95, f"Pearson r={r:.3f}\np={p:.2e}", transform=ax.transAxes,
         fontsize=7, va='top')
 

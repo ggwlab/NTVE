@@ -35,6 +35,8 @@ def first_existing_dir(*candidates: Path) -> Path:
 FIG3 = first_existing_dir(ROOT / "resources" / "fig3", ROOT / "Figure3")
 OUT_DIR = Path(__file__).parent / "3a_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "3a_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 sys.path.insert(0, str(ROOT))
 from ntvetools import load_gtf_df
@@ -224,6 +226,19 @@ merged_df["SN_threshold"] = [True if val < 1e-7 else False for val in merged_df[
 merged_df["lysate_threshold"] = [True if val < 1e-7 else False for val in merged_df["padj_lysate"]]
 
 plot_df = merged_df.query("lysate_threshold == True or SN_threshold == True")
+plot_df = plot_df.copy()
+plot_df["plot_log2fc_lysate"] = -plot_df["log2FoldChange_lysate"]
+plot_df["plot_log2fc_sn"] = -plot_df["log2FoldChange_SN"]
+plot_df["plot_threshold_class"] = np.select(
+    [
+        plot_df["lysate_threshold"] & plot_df["SN_threshold"],
+        plot_df["lysate_threshold"] & ~plot_df["SN_threshold"],
+        ~plot_df["lysate_threshold"] & plot_df["SN_threshold"],
+    ],
+    ["Both", "Lysate", "NTVE"],
+    default="None",
+)
+plot_df.to_csv(CSV_DIR / "3a_logFC_scatter_points.csv", index=False)
 fig = log_fc_scatter(
     plot_df,
     fc_annotation_cutoff_value=4,

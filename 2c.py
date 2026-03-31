@@ -28,6 +28,7 @@ PLOT_FONT_SIZE = 8
 PLOT_WIDTH = 12
 PLOT_HEIGHT = 2.5
 PLOT_OUTPUT_DIR = str(Path(__file__).parent / "2c_plots")
+CSV_OUTPUT_DIR = Path(__file__).parent / "2c_csv"
 
 # Set matplotlib for SVG editability - no embedded fonts
 plt.rcParams["svg.fonttype"] = "none"  # Don't convert text to paths
@@ -35,6 +36,7 @@ plt.rcParams["font.size"] = PLOT_FONT_SIZE
 
 # Create output directory if it doesn't exist
 os.makedirs(PLOT_OUTPUT_DIR, exist_ok=True)
+CSV_OUTPUT_DIR.mkdir(exist_ok=True)
 
 print("Imports successful!")
 print(f"✓ Plot output directory: {PLOT_OUTPUT_DIR}")
@@ -312,6 +314,46 @@ def plot_correlation_by_length(results, bin_labels, experiment_name, source_type
     return fig
 
 
+def export_correlation_tables(results, bin_labels, stem: str) -> None:
+    summary_rows = []
+    replicate_rows = []
+
+    for sample_num in sorted(results.keys()):
+        for bin_label in bin_labels:
+            if bin_label not in results[sample_num]:
+                continue
+            data = results[sample_num][bin_label]
+            summary_rows.append(
+                {
+                    "sample_num": sample_num,
+                    "length_bin": bin_label,
+                    "n_transcripts": data.get("n_transcripts", 0),
+                    "n_pairwise_correlations": data.get("n_pairwise_correlations", 0),
+                    "pearson_r_mean": data.get("pearson_r_mean"),
+                    "pearson_r_std": data.get("pearson_r_std"),
+                    "pearson_pval_mean": data.get("pearson_pval_mean"),
+                    "spearman_r_mean": data.get("spearman_r_mean"),
+                    "spearman_r_std": data.get("spearman_r_std"),
+                    "spearman_pval_mean": data.get("spearman_pval_mean"),
+                }
+            )
+            pearson_values = data.get("pearson_r_values", [])
+            spearman_values = data.get("spearman_r_values", [])
+            for pair_idx, (pearson_r, spearman_r) in enumerate(zip(pearson_values, spearman_values), start=1):
+                replicate_rows.append(
+                    {
+                        "sample_num": sample_num,
+                        "length_bin": bin_label,
+                        "pair_index": pair_idx,
+                        "pearson_r": pearson_r,
+                        "spearman_r": spearman_r,
+                    }
+                )
+
+    pd.DataFrame(summary_rows).to_csv(CSV_OUTPUT_DIR / f"{stem}_summary.csv", index=False)
+    pd.DataFrame(replicate_rows).to_csv(CSV_OUTPUT_DIR / f"{stem}_pairwise_values.csv", index=False)
+
+
 print("Loading transcript-level data...")
 output_dir = get_generated_figure2_loaded_dir()
 elo_tpm = pd.read_csv(output_dir / "elo_transcript_tpm_matrix.csv", index_col=0)
@@ -345,6 +387,11 @@ elo_corr_results_matched, elo_bins_matched = analyze_correlation_by_length(
 print(f"✓ Processed {len(elo_corr_results_matched)} Benchmarking samples")
 
 print("Creating Benchmarking correlation plots (1000bp bins, matched replicates)...")
+export_correlation_tables(
+    elo_corr_results_matched,
+    elo_bins_matched,
+    "2c_benchmarking_correlation_by_length_matched",
+)
 fig_elo_corr_matched = plot_correlation_by_length(
     elo_corr_results_matched,
     elo_bins_matched,

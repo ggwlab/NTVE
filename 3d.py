@@ -14,6 +14,8 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 OUT_DIR = Path(__file__).parent / "3d_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "3d_csv"
+CSV_DIR.mkdir(exist_ok=True)
 NTVE_GSEA = ROOT / "resources" / "gsea_ifn-gamma" / "ntve" / "gsea_report_for_na_pos_1727164795980.tsv"
 LYSATE_GSEA = ROOT / "resources" / "gsea_ifn-gamma" / "lysate" / "gsea_report_for_na_pos_1727164776729.tsv"
 
@@ -37,6 +39,7 @@ merged["NAME"] = merged["NAME"].str.replace("HALLMARK_","")
 merged = merged.sort_values("FDR q-val_lysate", na_position='last')
 merged["neg_log10_FDR_NTVE"]   = -np.log10(merged["FDR q-val_NTVE"]   + 1e-3)
 merged["neg_log10_FDR_lysate"] = -np.log10(merged["FDR q-val_lysate"] + 1e-3)
+merged.to_csv(CSV_DIR / "3d_gsea_dotplot_data.csv", index=False)
 
 # ── Plot ──────────────────────────────────────────────────────────────────────
 plt.rcParams.update({'font.size': 8, 'svg.fonttype': 'none'})

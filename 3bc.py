@@ -28,6 +28,8 @@ def first_existing_dir(*candidates: Path) -> Path:
 FIG3 = first_existing_dir(ROOT / "resources" / "fig3", ROOT / "Figure3")
 OUT_DIR = Path(__file__).parent / "3bc_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "3bc_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 
 def load_data(file_name: str) -> pd.DataFrame:
@@ -167,12 +169,35 @@ for condition in conditions:
     print(f"Downsampled - Positive: {len(pos_down)}, Negative: {len(neg_down)}")
 
 print("\nAUC Values:")
+summary_rows = []
+roc_rows = []
+pr_rows = []
 for condition in conditions:
     original = curve_data[condition]
     down = curve_data_downsampled[condition]
     print(f"\n{condition}:")
     print(f"  Original    - ROC AUC = {original[2]:.4f}, PR AUC = {original[5]:.4f}")
     print(f"  Downsampled - ROC AUC = {down[2]:.4f}, PR AUC = {down[5]:.4f}")
+    summary_rows.extend(
+        [
+            {"condition": condition, "dataset": "original", "roc_auc": original[2], "pr_auc": original[5]},
+            {"condition": condition, "dataset": "downsampled", "roc_auc": down[2], "pr_auc": down[5]},
+        ]
+    )
+    for dataset_name, data in [("original", original), ("downsampled", down)]:
+        fpr, tpr, _, precision, recall, _, _ = data
+        roc_rows.extend(
+            {"condition": condition, "dataset": dataset_name, "fpr": x, "tpr": y}
+            for x, y in zip(fpr, tpr)
+        )
+        pr_rows.extend(
+            {"condition": condition, "dataset": dataset_name, "recall": x, "precision": y}
+            for x, y in zip(recall, precision)
+        )
+
+pd.DataFrame(summary_rows).to_csv(CSV_DIR / "3bc_auc_summary.csv", index=False)
+pd.DataFrame(roc_rows).to_csv(CSV_DIR / "3bc_roc_curve_points.csv", index=False)
+pd.DataFrame(pr_rows).to_csv(CSV_DIR / "3bc_pr_curve_points.csv", index=False)
 
 plot_combined(curve_data, "3bc_roc_pr")
 print("Done.")

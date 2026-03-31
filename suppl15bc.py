@@ -20,6 +20,8 @@ from ntvetools import load_gtf_df
 
 OUT_DIR = Path(__file__).parent / "suppl15bc_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "suppl15bc_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 
 def first_existing_dir(*candidates: Path) -> Path:
@@ -149,6 +151,7 @@ def build_merged_df() -> pd.DataFrame:
 
 def main() -> None:
     merged_df = build_merged_df()
+    merged_df.to_csv(CSV_DIR / "suppl15bc_ifng_volcano_data.csv", index=False)
     genes_to_plot = list(
         merged_df.query("padj_lysate < 1E-150 or padj_SN < 1E-150 or abs(log2FoldChange_SN) > 6.5 or abs(log2FoldChange_lysate) > 6.5").index
     )

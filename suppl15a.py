@@ -34,6 +34,8 @@ from ntvetools import load_gtf_df
 ROOT = Path(__file__).parent.parent
 OUT_DIR = Path(__file__).parent / "suppl15a_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "suppl15a_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 matplotlib.rcParams["text.usetex"] = False
 matplotlib.rcParams["svg.fonttype"] = "none"
@@ -92,6 +94,9 @@ rpm["is_mt"]    = [gene_id_is_mt.get(g, False)  for g in rpm.index]
 rpm["lys_avg"] = rpm[LYSATE_IFN_SAMPLES].mean(axis=1)
 rpm["ntve_avg"] = rpm[NTVE_IFN_SAMPLES].mean(axis=1)
 rpm["enrichment_factor"] = (rpm["ntve_avg"] + 0.1) / (rpm["lys_avg"] + 0.1)
+rpm.reset_index().rename(columns={"index": "GeneID"}).to_csv(
+    CSV_DIR / "suppl15a_hexbin_gene_points.csv", index=False
+)
 
 # --- Log10 columns for correlation analysis ---
 log10p = lambda x: np.log10(x + 1e-3)

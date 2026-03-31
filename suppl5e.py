@@ -22,6 +22,8 @@ from ntvetools import load_gtf_df
 
 OUT_DIR = Path(__file__).parent / "suppl5e_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "suppl5e_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 GTF_FILE = ROOT / "resources" / "merged_gtf_homosapiens_v108_musmusculus_v109.csv.gz"
 QUANT_GLOB = str(ROOT / "resources" / "salmon_harmonized" / "*" / "quant.sf.gz")
@@ -99,13 +101,26 @@ groups = [
     ("reference", TOTAL_RNA_REFERENCE, "#888888ff"),
     ("gag", TOTAL_RNA_GAG_ONLY, "#ffbc22d8"),
 ]
+summary_rows = []
 
 for group_name, cols, color in groups:
     available = [c for c in cols if c in human_tpm_all_filtered.columns]
     if not available:
         continue
     means = human_tpm_all_filtered.groupby("length_category", observed=False)[available].mean().mean(axis=1)
+    stds = human_tpm_all_filtered.groupby("length_category", observed=False)[available].mean().std(axis=1, ddof=1)
     sterr = human_tpm_all_filtered.groupby("length_category", observed=False)[available].sem().mean(axis=1)
+    summary_rows.extend(
+        {
+            "group": group_name,
+            "length_category": category,
+            "n_replicates": len(available),
+            "mean_tpm": mean,
+            "std_tpm": std,
+            "stderr_tpm": err,
+        }
+        for category, mean, std, err in zip(LABELS, means, stds, sterr)
+    )
     ax.errorbar(
         range(len(LABELS)),
         means,
@@ -125,6 +140,7 @@ ax.set_xlabel("Transcript Length")
 ax.set_ylabel("Mean TPM")
 ax.legend(frameon=False)
 ax.text(0.70, 0.75, f"N={len(human_tpm_all_filtered)}", transform=ax.transAxes, fontsize=8)
+pd.DataFrame(summary_rows).to_csv(CSV_DIR / "suppl5e_length_resolved_summary.csv", index=False)
 
 save(fig, "suppl5e_total_rna_all_genes_gt1")
 plt.close(fig)
