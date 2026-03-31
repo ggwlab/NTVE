@@ -1,0 +1,13 @@
+##description: GTF file for ISBM synthetic sequences 
+##provider: ISBM Helmholtz Munich
+##format: gtf
+##date: 2024-08-26
+Gag_common_core	synthetic	gene	1	1169	.	+	.	gene_id "ISBM00000999991"; gene_version "1"; gene_name "Gag_common_core"; gene_source "synthetic"; gene_biotype "protein_coding";
+Gag_common_core	synthetic	transcript	1	1169	.	+	.	gene_id "ISBM00000999991"; gene_version "1"; transcript_id "ISBMT00000999991"; transcript_version "1"; gene_name "Gag_common_core"; gene_source "synthetic"; gene_biotype "protein_coding"; transcript_name "Gag_common_core-201"; transcript_source "synthetic"; transcript_biotype "protein_coding";
+Gag_common_core	synthetic	exon	1	1169	.	+	.	gene_id "ISBM00000999991"; gene_version "1"; transcript_id "ISBMT00000999991"; transcript_version "1"; exon_number "1"; gene_name "Gag_common_core"; gene_source "synthetic"; gene_biotype "protein_coding"; transcript_name "Gag_common_core-201"; transcript_source "synthetic"; transcript_biotype "protein_coding"; exon_id "ISBME00009999991"; exon_version "1";
+Gag_common_core	synthetic	CDS	1	1169	.	+	0	gene_id "ISBM00000999991"; gene_version "1"; transcript_id "ISBMT00000999991"; transcript_version "1"; exon_number "1"; gene_name "Gag_common_core"; gene_source "synthetic"; gene_biotype "protein_coding"; transcript_name "Gag_common_core-201"; transcript_source "synthetic"; transcript_biotype "protein_coding"; protein_id "ISBMP00000999991"; protein_version "1";
+mGL	synthetic	gene	1	849	.	+	.	gene_id "ISBM00000999992"; gene_version "1"; gene_name "mGL"; gene_source "synthetic"; gene_biotype "protein_coding";
+mGL	synthetic	transcript	1	849	.	+	.	gene_id "ISBM00000999992"; gene_version "1"; transcript_id "ISBMT00000999992"; transcript_version "1"; gene_name "mGL"; gene_source "synthetic"; gene_biotype "protein_coding"; transcript_name "mGL-201"; transcript_source "synthetic"; transcript_biotype "protein_coding";
+mGL	synthetic	exon	1	849	.	+	.	gene_id "ISBM00000999992"; gene_version "1"; transcript_id "ISBMT00000999992"; transcript_version "1"; exon_number "1"; gene_name "mGL"; gene_source "synthetic"; gene_biotype "protein_coding"; transcript_name "mGL-201"; transcript_source "synthetic"; transcript_biotype "protein_coding"; exon_id "ISBME00009999992"; exon_version "1";
+mGL	synthetic	CDS	1	849	.	+	0	gene_id "ISBM00000999992"; gene_version "1"; transcript_id "ISBMT00000999992"; transcript_version "1"; exon_number "1"; gene_name "mGL"; gene_source "synthetic"; gene_biotype "protein_coding"; transcript_name "mGL-201"; transcript_source "synthetic"; transcript_biotype "protein_coding"; protein_id "ISBMP00000999992"; protein_version "1";
+

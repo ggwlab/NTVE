@@ -1,0 +1,8 @@
+2025*
+old_git
+resources/*
+resources/
+Suppl20/bam_out
+0_RNA_Seq_Pipelines/indices_minimap/
+run_all_figure_notebooks.sh
+staged_runs/

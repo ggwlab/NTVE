@@ -1,0 +1,12 @@
+1) rename chromosomes, so that they can be seperated
+2) Merge the gtf and fa
+3) run STAR
+
+
+sed 's/^>/>hs_/' ../homo_sapiens/Homo_sapiens.GRCh38.dna.primary_assembly.fa > human_modified.fa
+sed 's/^>/>mm_/' ../mus_musculus/Mus_musculus.GRCm39.dna.primary_assembly.fa > mouse_modified.fa
+sed 's/^[0-9XYM]/hs_&/' ../homo_sapiens/Homo_sapiens.GRCh38.108.gtf > human_modified.gtf
+sed 's/^[0-9XYM]/mm_&/' ../mus_musculus/Mus_musculus.GRCm39.109.gtf > mouse_modified.gtf
+cat human_modified.fa mouse_modified.fa gag_common_core_and_mGL.fa > merged.fa
+cat human_modified.gtf mouse_modified.gtf synthetic_ISBM.gtf > merged.gtf
+../../scripts/STAR/source/STAR --runMode genomeGenerate --genomeFastaFiles merged.fa --genomeDir h38m39108112 --sjdbGTFfile merged.gtf --runThreadN 32
