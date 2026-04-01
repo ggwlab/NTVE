@@ -24,9 +24,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).parent.parent
+def find_root() -> Path:
+    here = Path(__file__).resolve()
+    for candidate in (here.parent, here.parent.parent):
+        if (candidate / "resources").exists():
+            return candidate
+    return here.parent
+
+
+ROOT = find_root()
 OUT_DIR = Path(__file__).parent / "suppl13b_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "suppl13_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 warnings.filterwarnings("ignore")
 plt.rcParams["svg.fonttype"] = "none"
@@ -154,6 +164,48 @@ def save_plot(fig: plt.Figure, stem: str) -> None:
         out = OUT_DIR / f"{stem}.{ext}"
         fig.savefig(out, format=ext, bbox_inches="tight", dpi=150)
         print(f"Saved: {out}")
+
+
+def export_curve_tables(experiment: str, coverage_stats_by_type: dict[str, dict[int, dict]], ratio_stats: dict[int, dict]) -> None:
+    rows = []
+    for sample_type, stats in coverage_stats_by_type.items():
+        for sample_num in sorted(stats):
+            data = stats[sample_num]
+            label = apply_name_mapping(experiment, sample_num, sample_type)
+            for pos, mean, lo, hi in zip(bin_centers, data["means"], data["ci_lower"], data["ci_upper"]):
+                rows.append(
+                    {
+                        "experiment": experiment,
+                        "panel": "coverage",
+                        "sample_type": sample_type,
+                        "sample_num": sample_num,
+                        "label": label,
+                        "position_relative_to_tes_bp": pos,
+                        "mean": mean,
+                        "ci_lower": lo,
+                        "ci_upper": hi,
+                    }
+                )
+
+    for sample_num in sorted(ratio_stats):
+        data = ratio_stats[sample_num]
+        label = apply_name_mapping(experiment, sample_num, "SN")
+        for pos, mean, lo, hi in zip(bin_centers, data["means"], data["ci_lower"], data["ci_upper"]):
+            rows.append(
+                {
+                    "experiment": experiment,
+                    "panel": "sn_lysate_ratio",
+                    "sample_type": "ratio",
+                    "sample_num": sample_num,
+                    "label": label,
+                    "position_relative_to_tes_bp": pos,
+                    "mean": mean,
+                    "ci_lower": lo,
+                    "ci_upper": hi,
+                }
+            )
+
+    pd.DataFrame(rows).to_csv(CSV_DIR / "suppl13b_spam_tes_coverage_curves.csv", index=False)
 
 
 def compute_ratio_stats(experiment: str) -> dict[int, dict]:
@@ -396,4 +448,5 @@ plot_coverage_lineplot("SPAM", "L", "suppl13b_spam_l_lineplot_absolute_tes")
 plot_coverage_lineplot("SPAM", "SN", "suppl13b_spam_sn_lineplot_absolute_tes")
 plot_sn_lysate_ratio("SPAM", spam_ratio_stats, "suppl13b_spam_sn_lysate_ratio_absolute_tes")
 plot_spam_combined(spam_ratio_stats)
+export_curve_tables("SPAM", coverage_stats["SPAM"], spam_ratio_stats)
 print("Done.")

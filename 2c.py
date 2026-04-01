@@ -41,7 +41,15 @@ CSV_OUTPUT_DIR.mkdir(exist_ok=True)
 print("Imports successful!")
 print(f"✓ Plot output directory: {PLOT_OUTPUT_DIR}")
 
-ROOT = Path(__file__).parent.parent
+def find_root() -> Path:
+    here = Path(__file__).resolve()
+    for candidate in (here.parent, here.parent.parent):
+        if (candidate / "resources").exists():
+            return candidate
+    return here.parent
+
+
+ROOT = find_root()
 
 
 def create_biotype_dicts(transcript_info_df, gtf_df_data):

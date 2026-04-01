@@ -6,3 +6,12 @@ Suppl20/bam_out
 0_RNA_Seq_Pipelines/indices_minimap/
 run_all_figure_notebooks.sh
 staged_runs/
+
+# local workbook drafts / copies
+SupplementaryTable6_Numeric data_2.xlsx
+SupplementaryTable6_Numeric data_filled_draft.xlsx
+
+# one-off local workbook utilities
+populate_workbook_draft.py
+rewrite_workbook_links.py
+SupplementaryTable6_Numeric data.xlsx

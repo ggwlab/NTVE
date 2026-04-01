@@ -19,9 +19,19 @@ import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr, spearmanr
 
-ROOT = Path(__file__).parent.parent
+def find_root() -> Path:
+    here = Path(__file__).resolve()
+    for candidate in (here.parent, here.parent.parent):
+        if (candidate / "resources").exists():
+            return candidate
+    return here.parent
+
+
+ROOT = find_root()
 OUT_DIR = Path(__file__).parent / "suppl13a_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).parent / "suppl13_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 sys.path.insert(0, str(ROOT))
 
@@ -301,6 +311,46 @@ def plot_correlation_by_length(results, bin_labels, experiment_name, source_type
     return fig
 
 
+def export_correlation_tables(results, bin_labels, stem: str) -> None:
+    summary_rows = []
+    replicate_rows = []
+
+    for sample_num in sorted(results.keys()):
+        for bin_label in bin_labels:
+            if bin_label not in results[sample_num]:
+                continue
+            data = results[sample_num][bin_label]
+            summary_rows.append(
+                {
+                    "sample_num": sample_num,
+                    "length_bin": bin_label,
+                    "n_transcripts": data.get("n_transcripts", 0),
+                    "n_pairwise_correlations": data.get("n_pairwise_correlations", 0),
+                    "pearson_r_mean": data.get("pearson_r_mean"),
+                    "pearson_r_std": data.get("pearson_r_std"),
+                    "pearson_pval_mean": data.get("pearson_pval_mean"),
+                    "spearman_r_mean": data.get("spearman_r_mean"),
+                    "spearman_r_std": data.get("spearman_r_std"),
+                    "spearman_pval_mean": data.get("spearman_pval_mean"),
+                }
+            )
+            pearson_values = data.get("pearson_r_values", [])
+            spearman_values = data.get("spearman_r_values", [])
+            for pair_idx, (pearson_r, spearman_r) in enumerate(zip(pearson_values, spearman_values), start=1):
+                replicate_rows.append(
+                    {
+                        "sample_num": sample_num,
+                        "length_bin": bin_label,
+                        "pair_index": pair_idx,
+                        "pearson_r": pearson_r,
+                        "spearman_r": spearman_r,
+                    }
+                )
+
+    pd.DataFrame(summary_rows).to_csv(CSV_DIR / f"{stem}_summary.csv", index=False)
+    pd.DataFrame(replicate_rows).to_csv(CSV_DIR / f"{stem}_pairwise_values.csv", index=False)
+
+
 print("Loading GTF reference data...")
 gtf_df_data = load_gtf_df(str(ROOT / "resources/merged_gtf_homosapiens_v108_musmusculus_v109.csv.gz"))
 
@@ -354,6 +404,11 @@ spam_corr_results_matched, spam_bins_matched = analyze_correlation_by_length(
 print(f"✓ Processed {len(spam_corr_results_matched)} Spam samples")
 
 print("Creating Spam correlation plots (1000bp bins, matched replicates)...")
+export_correlation_tables(
+    spam_corr_results_matched,
+    spam_bins_matched,
+    "suppl13a_secondary_benchmarking_correlation_by_length_matched",
+)
 fig_spam_corr_matched = plot_correlation_by_length(
     spam_corr_results_matched,
     spam_bins_matched,
