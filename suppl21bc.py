@@ -247,12 +247,46 @@ def plot_outputs() -> None:
     plot_panel_c()
 
 
+def _pathway_to_label(pathway: str) -> str:
+    return (
+        pathway.replace("GOBP_", "")
+        .replace("GOCC_", "")
+        .replace("_", " ")
+        .lower()
+    )
+
+
 def plot_panel_b(c5: pd.DataFrame) -> None:
-    row_labels = [label for label, _ in PANEL_B_ROWS]
-    pathway_to_label = {pathway: label for label, pathway in PANEL_B_ROWS}
     days = list(range(10))
 
-    fig, ax = plt.subplots(figsize=(8.4, 3.4))
+    # Collect all top-N significant hits per day to determine rows dynamically
+    all_hits: list[dict] = []
+    for day in days:
+        day_hits = (
+            c5[(c5["timepoint"] == day) & (c5["padj"] < 0.05)]
+            .sort_values("pval")
+            .head(TOP_N_PER_DAY)
+        )
+        for rank_within_day, (_, row) in enumerate(day_hits.iterrows(), start=1):
+            all_hits.append({
+                "day": day,
+                "rank_within_day": rank_within_day,
+                "pathway": row["pathway"],
+                "pval": row["pval"],
+                "padj": row["padj"],
+                "NES": row["NES"],
+            })
+
+    # Rows = unique pathways that appear in any day's top hits, ordered by first appearance
+    seen: dict[str, str] = {}
+    for h in all_hits:
+        p = h["pathway"]
+        if p not in seen:
+            seen[p] = _pathway_to_label(p)
+    row_labels = list(seen.values())
+    pathway_to_label_map = seen
+
+    fig, ax = plt.subplots(figsize=(8.4, max(3.4, len(row_labels) * 0.4)))
     ax.set_xlim(-0.6, len(days) - 0.4)
     ax.set_ylim(-0.5, len(row_labels) - 0.5)
     ax.invert_yaxis()
@@ -263,40 +297,31 @@ def plot_panel_b(c5: pd.DataFrame) -> None:
         ax.axvline(x - 0.5, color="#999999", lw=0.6, ls=(0, (2, 2)), zorder=0)
 
     selected_rows = []
-    for day in days:
-        day_hits = (
-            c5[(c5["timepoint"] == day) & (c5["padj"] < 0.05)]
-            .sort_values("pval")
-            .head(TOP_N_PER_DAY)
+    for h in all_hits:
+        pathway = h["pathway"]
+        label = pathway_to_label_map[pathway]
+        x = h["day"]
+        y = row_labels.index(label)
+        symbol = "+" if h["NES"] > 0 else "−"
+        ax.text(
+            x,
+            y,
+            symbol,
+            ha="center",
+            va="center",
+            fontsize=12,
+            bbox=dict(boxstyle="circle,pad=0.12", fc="white", ec="black", lw=1),
+            zorder=3,
         )
-        for rank_within_day, (_, row) in enumerate(day_hits.iterrows(), start=1):
-            pathway = row["pathway"]
-            if pathway not in pathway_to_label:
-                continue
-            x = int(row["timepoint"])
-            y = row_labels.index(pathway_to_label[pathway])
-            symbol = "+" if row["NES"] > 0 else "−"
-            ax.text(
-                x,
-                y,
-                symbol,
-                ha="center",
-                va="center",
-                fontsize=12,
-                bbox=dict(boxstyle="circle,pad=0.12", fc="white", ec="black", lw=1),
-                zorder=3,
-            )
-            selected_rows.append(
-                {
-                    "day": day,
-                    "rank_within_day": rank_within_day,
-                    "pathway": pathway,
-                    "label": pathway_to_label[pathway],
-                    "pval": row["pval"],
-                    "padj": row["padj"],
-                    "NES": row["NES"],
-                }
-            )
+        selected_rows.append({
+            "day": h["day"],
+            "rank_within_day": h["rank_within_day"],
+            "pathway": pathway,
+            "label": label,
+            "pval": h["pval"],
+            "padj": h["padj"],
+            "NES": h["NES"],
+        })
 
     ax.set_xticks(range(len(days)))
     ax.set_xticklabels([f"d{d}" for d in days], fontsize=8)
