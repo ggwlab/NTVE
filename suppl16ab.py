@@ -21,10 +21,12 @@ import numpy as np
 from pathlib import Path
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parent
 RESOURCES = REPO_ROOT / "resources"
 OUT_DIR = Path(__file__).resolve().parent / "suppl16ab_plots"
 OUT_DIR.mkdir(exist_ok=True)
+CSV_DIR = Path(__file__).resolve().parent / "suppl16ab_csv"
+CSV_DIR.mkdir(exist_ok=True)
 
 plt.rcParams["svg.fonttype"] = "none"
 
@@ -268,6 +270,37 @@ def plot_3x6_lys_sn(df: pd.DataFrame, species: str) -> plt.Figure:
 # ── Main ───────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     print("\n── Human manuscript panels ──")
+
+    # 16a: 6×6 SN correlation matrix
+    cols_6x6 = [
+        "24L006479", "24L006480", "24L006481",
+        "24L010910", "24L010911", "24L010912",
+    ]
+    labels_6x6 = [
+        "pure_SN_HEK_Rep1", "pure_SN_HEK_Rep2", "pure_SN_HEK_Rep3",
+        "SN_HEK_Rep1", "SN_HEK_Rep2", "SN_HEK_Rep3",
+    ]
+    corr_6x6 = rpm_homo_norm[cols_6x6].corr(method="pearson")
+    corr_6x6.index = labels_6x6
+    corr_6x6.columns = labels_6x6
+    corr_6x6.index.name = "sample"
+    corr_6x6.to_csv(CSV_DIR / "suppl16a_pearson_6x6_sn.csv")
+    print(f"  saved suppl16a_pearson_6x6_sn.csv")
+
+    # 16b: 3×6 Lysate vs SN cross-correlation matrix
+    lysate_3 = ["24L006460", "24L006461", "24L006462"]
+    sn_6 = ["24L006479", "24L006480", "24L006481", "24L010910", "24L010911", "24L010912"]
+    row_labels_3x6 = ["pure_Lys_HEK_Rep1", "pure_Lys_HEK_Rep2", "pure_Lys_HEK_Rep3"]
+    col_labels_3x6 = [
+        "pure_SN_HEK_Rep1", "pure_SN_HEK_Rep2", "pure_SN_HEK_Rep3",
+        "SN_HEK_Rep1", "SN_HEK_Rep2", "SN_HEK_Rep3",
+    ]
+    cross_corr = rpm_homo_norm[lysate_3 + sn_6].corr(method="pearson").loc[lysate_3, sn_6]
+    cross_corr.index = row_labels_3x6
+    cross_corr.columns = col_labels_3x6
+    cross_corr.to_csv(CSV_DIR / "suppl16b_pearson_3x6_lysate_vs_sn.csv")
+    print(f"  saved suppl16b_pearson_3x6_lysate_vs_sn.csv")
+
     save(
         plot_6x6_sn(rpm_homo_norm, "Human"),
         "suppl16a_flag_purification_correlation",
