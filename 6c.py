@@ -22,7 +22,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Setup paths
-ROOT = Path(__file__).parent.parent
+ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
 
 OUT_DIR = Path(__file__).parent / "6c_plots"
@@ -88,117 +88,102 @@ def main():
     adata.obs["replicate"] = replicate
     adata.obs["lysate"] = lysate
     
-    # 7. UMAP Analysis (Fit on SNs, Project Lysates)
-    print("Running UMAP analysis and projection...")
+    # 7. Gene symbol conversion (matches notebook)
+    print("Converting to gene symbols...")
+    from ntvetools import load_gtf_df
+    gtf_dict = load_gtf_df()
+    ensg2symbol = gtf_dict["gene_id_to_name"]
+    adata.var["gene_symbols"] = adata.var_names.map(ensg2symbol)
+    adata.var_names = adata.var["gene_symbols"].fillna(
+        pd.Series(adata.var_names, index=adata.var.index)
+    )
+    adata.var_names_make_unique()
+
+    # 8. UMAP Analysis — fit on SNs only, no log1p (matches notebook)
+    print("Running UMAP analysis...")
     adata_sn = adata[~adata.obs['lysate']].copy()
-    adata_lysate = adata[adata.obs['lysate']].copy()
-    
-    sc.pp.log1p(adata_sn)
+
     sc.tl.pca(adata_sn)
     sc.pp.neighbors(adata_sn)
     sc.tl.umap(adata_sn)
-    
-    if len(adata_lysate) > 0:
-        sc.pp.log1p(adata_lysate)
-        sc.tl.ingest(adata_lysate, adata_sn, obs='lineage')
-        
-        # Combine
-        lysate_mask = adata.obs['lysate'].values
-        X_umap_combined = np.zeros((len(adata), 2))
-        X_umap_combined[~lysate_mask] = adata_sn.obsm['X_umap']
-        X_umap_combined[lysate_mask] = adata_lysate.obsm['X_umap']
-        adata.obsm['X_umap'] = X_umap_combined
-    else:
-        adata.obsm['X_umap'] = adata_sn.obsm['X_umap']
 
-    # 8. Custom Plotting
+    # 9. Custom Plotting
     print("Generating custom UMAP plots...")
     plot_custom_umap(adata, adata_sn)
 
 def plot_custom_umap(adata, adata_sn):
     plt.rcParams['font.size'] = 8
     plt.rcParams['font.family'] = 'sans-serif'
-    
+
     cm_to_inch = 1 / 2.54
     subplot_width_inch = 4 * cm_to_inch
     subplot_height_inch = 5 * cm_to_inch
-    left_margin, right_margin, bottom_margin, top_margin, spacing = 0.65, 0.6, 0.5, 0.3, 0.5
-    fwidth = left_margin + 2 * subplot_width_inch + spacing + right_margin
+    left_margin, right_margin, bottom_margin, top_margin = 0.65, 0.6, 0.5, 0.3
+    fwidth = left_margin + subplot_width_inch + right_margin
     fheight = bottom_margin + subplot_height_inch + top_margin
-    
+
     markers = {6: '^', 9: 's', 16: 'o'}
     lineage_base_colors = {
-        'Ec': np.array([0.8, 0.2, 0.2]),    # Red
-        'En': np.array([0.2, 0.6, 0.2]),    # Green
-        'Mes': np.array([0.2, 0.4, 0.8]),   # Blue
-        'Ipsc': np.array([0.6, 0.6, 0.6])   # Gray
+        'Ec': np.array([0.8, 0.2, 0.2]),
+        'En': np.array([0.2, 0.6, 0.2]),
+        'Mes': np.array([0.2, 0.4, 0.8]),
+        'Ipsc': np.array([0.6, 0.6, 0.6]),
     }
-    
-    unique_tps = sorted(adata.obs['timepoint'].unique())
+
+    unique_tps = sorted(adata_sn.obs['timepoint'].unique())
     tp_min, tp_max = min(unique_tps), max(unique_tps)
-    
+
     def get_color(base_color, tp):
         norm_tp = 0.5 if tp_max == tp_min else (tp - tp_min) / (tp_max - tp_min)
         sat = 0.3 + norm_tp * 0.7
         white = np.array([1.0, 1.0, 1.0])
         return np.clip(white + sat * (base_color - white), 0, 1)
-        
+
     def get_size(tp):
         norm_tp = 0.5 if tp_max == tp_min else (tp - tp_min) / (tp_max - tp_min)
         return 5 + norm_tp * 65
 
     fig = plt.figure(figsize=(fwidth, fheight), facecolor='white')
-    axw, axh = subplot_width_inch / fwidth, subplot_height_inch / fheight
-    ax1 = fig.add_axes([left_margin / fwidth, bottom_margin / fheight, axw, axh])
-    ax2 = fig.add_axes([(left_margin + subplot_width_inch + spacing) / fwidth, bottom_margin / fheight, axw, axh])
-    
-    # Left Panel: SNs only
+    axw = subplot_width_inch / fwidth
+    axh = subplot_height_inch / fheight
+    ax = fig.add_axes([left_margin / fwidth, bottom_margin / fheight, axw, axh])
+
     coords_sn = adata_sn.obsm['X_umap']
     for idx, row in adata_sn.obs.iterrows():
         x, y = coords_sn[adata_sn.obs.index.get_loc(idx)]
-        c = get_color(lineage_base_colors[row['lineage'][:3] if row['lineage'] != 'Ipsc' else 'Ipsc'], row['timepoint'])
-        ax1.scatter(x, y, marker=markers[row['replicate']], s=get_size(row['timepoint']), 
-                   c=[c], alpha=0.6, edgecolors='black', linewidths=0.5)
-    
-    # Right Panel: Combined
-    coords_all = adata.obsm['X_umap']
-    for idx, row in adata.obs.iterrows():
-        x, y = coords_all[adata.obs.index.get_loc(idx)]
         lin_key = row['lineage'][:3] if row['lineage'] != 'Ipsc' else 'Ipsc'
         c = get_color(lineage_base_colors[lin_key], row['timepoint'])
-        s = get_size(row['timepoint'])
-        if row['lysate']:
-            ax2.scatter(x, y, marker=markers[row['replicate']], s=s, facecolors='none', 
-                       edgecolors=c, alpha=0.6, linewidths=1.5)
-        else:
-            ax2.scatter(x, y, marker=markers[row['replicate']], s=s, c=[c], 
-                       alpha=0.6, edgecolors='black', linewidths=0.5)
-    
-    for ax, title in zip([ax1, ax2], ['SNs only', 'SNs + projected lysates']):
-        ax.set_xlabel('UMAP1'); ax.set_ylabel('UMAP2'); ax.set_title(title)
-        ax.set_xlim(coords_sn[:, 0].min()-1, coords_sn[:, 0].max()+1)
-        ax.set_ylim(coords_sn[:, 1].min()-1, coords_sn[:, 1].max()+1)
+        ax.scatter(x, y, marker=markers[row['replicate']], s=get_size(row['timepoint']),
+                   c=[c], alpha=0.6, edgecolors='black', linewidths=0.5)
 
-    # Legends
-    legend_elements_replicates = [
-        Line2D([0], [0], marker=m, color='w', markerfacecolor='gray', markersize=6, 
-               markeredgecolor='black', markeredgewidth=0.5, label=f'Clone {c}')
-        for c, m in markers.items()
-    ]
-    ax1.legend(handles=legend_elements_replicates, loc='best', fontsize=6, title='Replicate', title_fontsize=6)
-    
-    legend_elements_lineage = [
-        Line2D([0], [0], marker='o', color='w', markerfacecolor=lineage_base_colors['Ec'], markersize=6, label='Ectoderm'),
-        Line2D([0], [0], marker='o', color='w', markerfacecolor=lineage_base_colors['En'], markersize=6, label='Endoderm'),
-        Line2D([0], [0], marker='o', color='w', markerfacecolor=lineage_base_colors['Mes'], markersize=6, label='Mesoderm'),
-        Line2D([0], [0], marker='o', color='w', markerfacecolor=lineage_base_colors['Ipsc'], markersize=6, label='iPSC'),
-        Line2D([0], [0], marker='o', color='w', markerfacecolor='gray', markersize=6, label='SN'),
-        Line2D([0], [0], marker='o', color='w', markerfacecolor='none', markeredgecolor='gray', markersize=6, markeredgewidth=1.5, label='Lysate'),
-    ]
-    ax2.legend(handles=legend_elements_lineage, loc='best', fontsize=6, title='Lineage & Type', title_fontsize=6)
+    ax.set_xlabel('UMAP1')
+    ax.set_ylabel('UMAP2')
+    ax.set_title('Differentiation of 3 hiPSC clones', fontsize=8)
 
-    plt.savefig(OUT_DIR / "trilineage_umap_two_panels.png", dpi=300, bbox_inches='tight')
-    plt.savefig(OUT_DIR / "trilineage_umap_two_panels.svg", format='svg', bbox_inches='tight')
+    # Timepoint colorbar
+    import matplotlib.cm as mcm
+    sm = plt.cm.ScalarMappable(cmap='Greys', norm=plt.Normalize(vmin=tp_min, vmax=tp_max))
+    sm.set_array([])
+    cbar = fig.colorbar(sm, ax=ax, shrink=0.4, aspect=10, pad=0.02)
+    cbar.set_label('Timepoint', fontsize=7)
+    cbar.set_ticks([tp_min, tp_max])
+
+    # Legend: one entry per lineage × clone combination
+    legend_elements = []
+    for lin, label in [('Ec', 'ectoderm'), ('Mes', 'mesoderm'), ('En', 'endoderm')]:
+        base = lineage_base_colors[lin]
+        for clone, marker in markers.items():
+            c = get_color(base, tp_max)
+            legend_elements.append(
+                Line2D([0], [0], marker=marker, color='w', markerfacecolor=c,
+                       markersize=6, markeredgecolor='black', markeredgewidth=0.5,
+                       label=f'{label} clone {clone}')
+            )
+    ax.legend(handles=legend_elements, loc='best', fontsize=5, ncol=3)
+
+    fig.savefig(OUT_DIR / "trilineage_umap.png", dpi=300, bbox_inches='tight')
+    fig.savefig(OUT_DIR / "trilineage_umap.svg", format='svg', bbox_inches='tight')
+    plt.close(fig)
     print(f"Saved UMAP plots to {OUT_DIR}")
 
 if __name__ == "__main__":
