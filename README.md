@@ -94,14 +94,12 @@ notebook, which loads only bundled resources and produces a single figure:
 
 ```bash
 conda activate ntve
-jupyter lab Suppl6/enrichment_factor_distribution.ipynb
+python 6.py
 ```
 
-- **Expected output**: SVG plot written to `Suppl6/plots/`.
+- **Expected output**: SVG plot written to `6_plots/`.
 - **Expected run time**: < 2 min on a normal desktop.
 
-An equivalent main-figure version is available at
-`Figure1/fig1_enrichment_factor_distribution.ipynb`.
 
 ---
 
@@ -109,14 +107,8 @@ An equivalent main-figure version is available at
 
 ### Running individual figure notebooks
 
-Each `Figure*/` and `Suppl*/` directory contains one or more Jupyter notebooks
-that produce the panels for the corresponding figure. Open them with
-JupyterLab and execute all cells:
+There is a python file for each subfigure (or in rare cases a python file that creates two panels). Please run all with the ntve conda environment. 
 
-```bash
-conda activate ntve
-jupyter lab Figure1/fig1_enrichment_factor_distribution.ipynb
-```
 
 ### Docker-based R analyses
 
@@ -174,7 +166,7 @@ ordered list of steps, expected inputs/outputs, and path-portability guidance.
 - `Figure6/pipeline/` — 5 notebooks that load quantification data and run DESeq2-based analyses (LRT, cubic splines, per-day comparisons) feeding into the interactive scatter plots. See `Figure6/pipeline/README.md` for execution order and Docker requirements.
 
 ### Interactive plots
-- `Figure6/interactive_scatter_plots_with_timeseries_standalone/` — standalone HTML scatter plots bundling Plotly.js v3.3.1 (MIT, Plotly Inc.)
+- [`https://magro.codeberg.page/Trilinplots/`](https://magro.codeberg.page/Trilinplots/) — standalone HTML scatter plots bundling Plotly.js v3.3.1 (MIT, Plotly Inc.)
 
 ### Helper tools
 - `resources/ntvetools/` — Python utility library (MIT)
