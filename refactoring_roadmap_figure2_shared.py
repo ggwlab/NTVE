@@ -6,24 +6,22 @@ import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
 
+from repo_paths import FIGURE2_LOADED_DIR, find_repo_root
+
 
 def find_root() -> Path:
-    here = Path(__file__).resolve()
-    for candidate in (here.parent, here.parent.parent):
-        if (candidate / "resources").exists():
-            return candidate
-    return here.parent.parent
+    return find_repo_root(Path(__file__))
 
 
 ROOT = find_root()
-GENERATED_FIG2_LOADED_DIR = Path(__file__).parent / "figure2_loaded_data"
+GENERATED_FIG2_LOADED_DIR = FIGURE2_LOADED_DIR
 
 
 def get_generated_figure2_loaded_dir() -> Path:
     if not GENERATED_FIG2_LOADED_DIR.exists():
         raise FileNotFoundError(
             f"Missing generated Figure 2 inputs at {GENERATED_FIG2_LOADED_DIR}. "
-            "Run `conda run -n ntve python figure2_prepare_loaded_data.py` first."
+            "Run `conda run -n ntve python Figure2/figure2_prepare_loaded_data.py` first."
         )
     return GENERATED_FIG2_LOADED_DIR
 

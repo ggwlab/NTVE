@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Stage a minimal explicit refactoring bundle into /tmp, run it there, and
-# sync generated outputs back into refactoring_roadmap.
+# sync generated outputs back into the repo.
 #
 # Run from repo root:
-#   bash refactoring_roadmap/run_stage_tmp_complete.sh
+#   bash run_stage_tmp_complete.sh
 #
 # This script intentionally does NOT copy the whole repository. It writes an
 # explicit manifest into the staged workspace so copied inputs are auditable.
@@ -30,55 +30,57 @@ err() { echo "[FAIL] $1"; }
 note() { echo "[INFO] $1"; }
 
 SCRIPT_FILES=(
-  "1e.py"
-  "1f.py"
-  "1g.py"
-  "1j.py"
-  "2a.py"
-  "2b.py"
-  "2c.py"
-  "3a.py"
-  "3bc.py"
-  "3d.py"
-  "4cde.py"
-  "figure4_prepare_deseq2.py"
-  "5b.py"
-  "6c.py"
-  "6def.py"
-  "figure2_prepare_loaded_data.py"
-  "fig7_2vs2.py"
-  "fig7_shared.py"
-  "fig7c.py"
-  "fig7c_extract_curves.R"
-  "fig7c_pipeline.py"
-  "fig7c_prepare_inputs.py"
-  "run_deseq2_analysis.R"
+  "Figure1/1e.py"
+  "Figure1/1f.py"
+  "Figure1/1g.py"
+  "Figure1/1j.py"
+  "Figure2/figure2_prepare_loaded_data.py"
+  "Figure2/2a.py"
+  "Figure2/2b.py"
+  "Figure2/2c.py"
+  "Figure3/3a.py"
+  "Figure3/3bc.py"
+  "Figure3/3d.py"
+  "Figure4/figure4_prepare_deseq2.py"
+  "Figure4/4cde.py"
+  "Figure4/run_deseq2_analysis.R"
+  "Figure5/5b.py"
+  "Figure6/6c.py"
+  "Figure6/6def.py"
+  "Figure6/figure6_prepare_three_lineage_data.py"
+  "Figure7/fig7_2vs2.py"
+  "Figure7/fig7_shared.py"
+  "Figure7/fig7c.py"
+  "Figure7/fig7c_extract_curves.R"
+  "Figure7/fig7c_pipeline.py"
+  "Figure7/fig7c_prepare_inputs.py"
   "rediscovery_analysis_lib.py"
   "refactoring_roadmap_figure2_shared.py"
-  "suppl10.py"
-  "suppl11a.py"
-  "suppl11b.py"
-  "suppl11b_2a.py"
-  "suppl12a.py"
-  "suppl12b.py"
-  "suppl13a.py"
-  "suppl13b.py"
-  "suppl14.py"
-  "suppl15a.py"
-  "suppl15bc.py"
-  "suppl16ab.py"
-  "suppl19.py"
-  "suppl20a.py"
-  "suppl21a.py"
-  "suppl21bc.py"
-  "suppl21bc_rankings.py"
-  "suppl5.py"
-  "suppl5d.py"
-  "suppl5e.py"
-  "suppl6_data.py"
-  "suppl6ab.py"
-  "suppl8ab.py"
+  "Suppl5/suppl5.py"
+  "Suppl5/suppl5d.py"
+  "Suppl5/suppl5e.py"
+  "Suppl6/suppl6_data.py"
+  "Suppl6/suppl6ab.py"
+  "Suppl8/suppl8ab.py"
+  "Suppl10/suppl10.py"
+  "Suppl11/suppl11a.py"
+  "Suppl11/suppl11b.py"
+  "Suppl11/suppl11b_2a.py"
+  "Suppl12/suppl12a.py"
+  "Suppl12/suppl12b.py"
+  "Suppl13/suppl13a.py"
+  "Suppl13/suppl13b.py"
+  "Suppl14/suppl14.py"
+  "Suppl15/suppl15a.py"
+  "Suppl15/suppl15bc.py"
+  "Suppl16/suppl16ab.py"
+  "Suppl19/suppl19.py"
+  "Suppl20/suppl20a.py"
+  "Suppl21/suppl21a.py"
+  "Suppl21/suppl21bc.py"
+  "Suppl21/suppl21bc_rankings.py"
   "ntvetools"
+  "repo_paths.py"
 )
 
 REFERENCE_INPUTS=(
@@ -135,47 +137,47 @@ PRECOMPUTED_UPSTREAM_INPUTS=(
 )
 
 RUN_SCRIPTS=(
-  "refactoring_roadmap/1e.py"
-  "refactoring_roadmap/1f.py"
-  "refactoring_roadmap/1g.py"
-  "refactoring_roadmap/1j.py"
-  "refactoring_roadmap/figure2_prepare_loaded_data.py"
-  "refactoring_roadmap/2a.py"
-  "refactoring_roadmap/2b.py"
-  "refactoring_roadmap/2c.py"
-  "refactoring_roadmap/3a.py"
-  "refactoring_roadmap/3bc.py"
-  "refactoring_roadmap/3d.py"
-  "refactoring_roadmap/figure4_prepare_deseq2.py"
-  "refactoring_roadmap/4cde.py"
-  "refactoring_roadmap/5b.py"
-  "refactoring_roadmap/6c.py"
-  "refactoring_roadmap/6def.py"
-  "refactoring_roadmap/suppl5.py"
-  "refactoring_roadmap/suppl5d.py"
-  "refactoring_roadmap/suppl5e.py"
-  "refactoring_roadmap/suppl6_data.py"
-  "refactoring_roadmap/suppl6ab.py"
-  "refactoring_roadmap/suppl8ab.py"
-  "refactoring_roadmap/suppl10.py"
-  "refactoring_roadmap/suppl11a.py"
-  "refactoring_roadmap/suppl11b.py"
-  "refactoring_roadmap/suppl11b_2a.py"
-  "refactoring_roadmap/suppl12a.py"
-  "refactoring_roadmap/suppl12b.py"
-  "refactoring_roadmap/suppl13a.py"
-  "refactoring_roadmap/suppl13b.py"
-  "refactoring_roadmap/suppl14.py"
-  "refactoring_roadmap/suppl15a.py"
-  "refactoring_roadmap/suppl15bc.py"
-  "refactoring_roadmap/suppl16ab.py"
-  "refactoring_roadmap/fig7c_pipeline.py"
-  "refactoring_roadmap/fig7_2vs2.py"
-  "refactoring_roadmap/suppl19.py"
-  "refactoring_roadmap/suppl20a.py"
-  "refactoring_roadmap/suppl21a.py"
-  "refactoring_roadmap/suppl21bc_rankings.py"
-  "refactoring_roadmap/suppl21bc.py"
+  "Figure1/1e.py"
+  "Figure1/1f.py"
+  "Figure1/1g.py"
+  "Figure1/1j.py"
+  "Figure2/figure2_prepare_loaded_data.py"
+  "Figure2/2a.py"
+  "Figure2/2b.py"
+  "Figure2/2c.py"
+  "Figure3/3a.py"
+  "Figure3/3bc.py"
+  "Figure3/3d.py"
+  "Figure4/figure4_prepare_deseq2.py"
+  "Figure4/4cde.py"
+  "Figure5/5b.py"
+  "Figure6/6c.py"
+  "Figure6/6def.py"
+  "Suppl5/suppl5.py"
+  "Suppl5/suppl5d.py"
+  "Suppl5/suppl5e.py"
+  "Suppl6/suppl6_data.py"
+  "Suppl6/suppl6ab.py"
+  "Suppl8/suppl8ab.py"
+  "Suppl10/suppl10.py"
+  "Suppl11/suppl11a.py"
+  "Suppl11/suppl11b.py"
+  "Suppl11/suppl11b_2a.py"
+  "Suppl12/suppl12a.py"
+  "Suppl12/suppl12b.py"
+  "Suppl13/suppl13a.py"
+  "Suppl13/suppl13b.py"
+  "Suppl14/suppl14.py"
+  "Suppl15/suppl15a.py"
+  "Suppl15/suppl15bc.py"
+  "Suppl16/suppl16ab.py"
+  "Figure7/fig7c_pipeline.py"
+  "Figure7/fig7_2vs2.py"
+  "Suppl19/suppl19.py"
+  "Suppl20/suppl20a.py"
+  "Suppl21/suppl21a.py"
+  "Suppl21/suppl21bc_rankings.py"
+  "Suppl21/suppl21bc.py"
 )
 
 write_manifest() {
@@ -190,7 +192,7 @@ write_manifest() {
       if [ "${item}" = "ntvetools" ] || [ "${item}" = "rediscovery_analysis_lib.py" ]; then
         echo "  - ${item} -> ${item}"
       else
-        echo "  - ${item} -> refactoring_roadmap/${item}"
+        echo "  - ${item} -> ${item}"
       fi
     done
     echo
@@ -217,10 +219,8 @@ write_manifest() {
     done
     echo
     echo "Outputs synced back:"
-    echo "  - refactoring_roadmap/*_plots"
-    echo "  - refactoring_roadmap/*_output"
-    echo "  - refactoring_roadmap/*_csv"
-    echo "  - refactoring_roadmap/figure2_loaded_data"
+    echo "  - Figure*/{*_plots,*_output,*_csv,figure2_loaded_data}"
+    echo "  - Suppl*/{*_plots,*_output,*_csv}"
     echo "  - staged_runs/${STAMP}/Figure7/*"
     echo "  - staged_runs/${STAMP}/run.log"
     echo "  - staged_runs/${STAMP}/manifest.txt"
@@ -250,14 +250,13 @@ copy_file_to_stage() {
 
 copy_into_stage() {
   note "Copying explicit manifest into ${STAGED_REPO}"
-  mkdir -p "${STAGED_REPO}/refactoring_roadmap"
 
   local script
   for script in "${SCRIPT_FILES[@]}"; do
     if [ "${script}" = "ntvetools" ] || [ "${script}" = "rediscovery_analysis_lib.py" ]; then
       copy_file_to_stage "${script}" "${script}"
     else
-      copy_file_to_stage "${script}" "refactoring_roadmap/${script}"
+      copy_file_to_stage "${script}" "${script}"
     fi
   done
 
@@ -295,17 +294,10 @@ run_py() {
 sync_back_outputs() {
   note "Syncing staged refactoring outputs back into repo"
   while IFS= read -r dir; do
-    base="$(basename "${dir}")"
-    mkdir -p "${REPO_ROOT}/${base}"
-    rsync -a "${dir}/" "${REPO_ROOT}/${base}/"
-  done < <(find "${STAGED_REPO}/refactoring_roadmap" -maxdepth 1 -type d \( -name '*_plots' -o -name '*_output' -o -name '*_csv' \) | sort)
-
-  if [ -d "${STAGED_REPO}/refactoring_roadmap/figure2_loaded_data" ]; then
-    mkdir -p "${REPO_ROOT}/figure2_loaded_data"
-    rsync -a \
-      "${STAGED_REPO}/refactoring_roadmap/figure2_loaded_data/" \
-      "${REPO_ROOT}/figure2_loaded_data/"
-  fi
+    rel="${dir#${STAGED_REPO}/}"
+    mkdir -p "${REPO_ROOT}/$(dirname "${rel}")"
+    rsync -a "${dir}/" "${REPO_ROOT}/${rel}/"
+  done < <(find "${STAGED_REPO}" -type d \( -name '*_plots' -o -name '*_output' -o -name '*_csv' -o -name 'figure2_loaded_data' \) | sort)
 
   note "Preserving staged Figure7 pipeline outputs under staged_runs/${STAMP}"
   for dir in \

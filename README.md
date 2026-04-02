@@ -94,10 +94,10 @@ notebook, which loads only bundled resources and produces a single figure:
 
 ```bash
 conda activate ntve
-python 6.py
+python Figure1/1g.py
 ```
 
-- **Expected output**: SVG plot written to `6_plots/`.
+- **Expected output**: SVG plot written to `Figure1/1g_plots/`.
 - **Expected run time**: < 2 min on a normal desktop.
 
 
@@ -107,7 +107,7 @@ python 6.py
 
 ### Running individual figure notebooks
 
-There is a python file for each subfigure (or in rare cases a python file that creates two panels). Please run all with the ntve conda environment. 
+There is a python file for each subfigure (or in rare cases a python file that creates two panels). Run them from the repo root with the `ntve` conda environment, for example `python Figure1/1e.py` or `python Suppl16/suppl16ab.py`.
 
 
 ### Docker-based R analyses
