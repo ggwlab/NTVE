@@ -70,7 +70,18 @@ for construct in CONSTRUCTS:
         mgl_plot_data.append({"Condition": NAME_MAPPING[construct], "Input_ng": value})
 
 mgl_plot_df = pd.DataFrame(mgl_plot_data)
-stats_df = mgl_plot_df.groupby("Condition")["Input_ng"].agg(["mean", "std"]).reset_index()
+log_stats_df = (
+    mgl_plot_df.assign(log10_Input_ng=np.log10(mgl_plot_df["Input_ng"]))
+    .groupby("Condition")["log10_Input_ng"]
+    .agg(["mean", "std"])
+    .reset_index()
+)
+stats_df = log_stats_df.rename(columns={"mean": "log10_mean", "std": "log10_std"})
+stats_df["mean"] = 10 ** stats_df["log10_mean"]
+stats_df["lower"] = 10 ** (stats_df["log10_mean"] - stats_df["log10_std"])
+stats_df["upper"] = 10 ** (stats_df["log10_mean"] + stats_df["log10_std"])
+stats_df["yerr_lower"] = stats_df["mean"] - stats_df["lower"]
+stats_df["yerr_upper"] = stats_df["upper"] - stats_df["mean"]
 stats_df["Condition"] = pd.Categorical(
     stats_df["Condition"],
     categories=[NAME_MAPPING[c] for c in CONSTRUCTS],
@@ -90,7 +101,7 @@ ax.bar(
     x_pos,
     stats_df["mean"],
     bar_width,
-    yerr=stats_df["std"],
+    yerr=np.vstack([stats_df["yerr_lower"], stats_df["yerr_upper"]]),
     capsize=5,
     color=sn_color,
     alpha=0.7,
@@ -105,7 +116,7 @@ for i, condition in enumerate(stats_df["Condition"]):
 ax.set_yscale("log")
 ax.axhline(1, ls="--", color="gray", alpha=0.5, linewidth=1.5, label="1 ng reference")
 ax.set_title(
-    "Benchmarking Experiment - Estimated RNA Input (SN only)\n(Bars: Mean ± SD, Points: Individual Replicates)",
+    "Benchmarking Experiment - Estimated RNA Input (SN only)\n(Bars: Geometric Mean ± 1 log10-SD, Points: Individual Replicates)",
     fontweight="bold",
     fontsize=PLOT_FONT_SIZE + 1,
 )
