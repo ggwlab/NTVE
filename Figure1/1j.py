@@ -77,7 +77,7 @@ plt.rcParams.update({'font.size': 8, 'svg.fonttype': 'none'})
 axes_size_in = 50 / 25.4
 
 groups = [
-    ('gag:PABP', GAG_PABP_SAMPLES, '#76c7dc'),
+    (r'NTVE$_{\mathrm{PABP}}$', GAG_PABP_SAMPLES, '#76c7dc'),
     ('Reference', POLYA_REFERENCE_COLS, '#888888'),
 ]
 summary_rows = []
@@ -108,7 +108,7 @@ for label, cols, color in groups:
     if label == 'Reference':
         ax.fill_between(range(len(LABELS)), list(means), color=color, alpha=0.2)
 
-# Pearson r between gag:PABP and reference
+# Pearson r between NTVE_PABP and reference
 pabp_avail = [c for c in GAG_PABP_SAMPLES if c in human_tpm_filtered.columns]
 ref_avail  = [c for c in POLYA_REFERENCE_COLS if c in human_tpm_filtered.columns]
 pabp_means = human_tpm_filtered.groupby('length_category', observed=False)[pabp_avail].mean().mean(axis=1)

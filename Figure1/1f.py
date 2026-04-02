@@ -41,13 +41,13 @@ gene_id_is_mt      = gtf_dict["gene_id_is_mt"]
 
 print("Loading counts...")
 result = load_and_preprocess_featurecounts(str(HARMONIZED_COUNTS_FILE))
-rpm_df = result["rpm_ensg_only"]
-print(f"  {len(rpm_df)} genes loaded")
+cpm_df = result["rpm_ensg_only"]
+print(f"  {len(cpm_df)} genes loaded")
 
 # ── Build gene table ──────────────────────────────────────────────────────────
-df = pd.DataFrame(index=rpm_df.index)
-df["sn_avg"]  = rpm_df[SN_SAMPLES].mean(axis=1)
-df["lys_avg"] = rpm_df[LYSATE_SAMPLES].mean(axis=1)
+df = pd.DataFrame(index=cpm_df.index)
+df["sn_avg"]  = cpm_df[SN_SAMPLES].mean(axis=1)
+df["lys_avg"] = cpm_df[LYSATE_SAMPLES].mean(axis=1)
 df["GeneName"]          = df.index.map(lambda x: gene_id_to_name.get(x, x))
 df["is_mt"]             = df.index.map(lambda x: gene_id_is_mt.get(x, False))
 df["is_protein_coding"] = df.index.map(lambda x: gene_id_to_biotype.get(x, "") == "protein_coding")
@@ -82,10 +82,10 @@ ax.scatter(log10p(df[pc_mask]["lys_avg"]),    log10p(df[pc_mask]["sn_avg"]),
 ax.scatter(log10p(df[other_mask]["lys_avg"]), log10p(df[other_mask]["sn_avg"]),
            c="orange",  s=2, alpha=0.5, label="Noncoding",      rasterized=True)
 ax.scatter(log10p(df[mt_mask]["lys_avg"]),    log10p(df[mt_mask]["sn_avg"]),
-           c="red",     s=5, alpha=0.8, label="MT-encoded")
+           c="#b3b3b3", s=5, alpha=0.8, label="mitochondrial")
 
-ax.set_xlabel("RPM per gene — Lysate", fontsize=8)
-ax.set_ylabel("RPM per gene — SN",     fontsize=8)
+ax.set_xlabel("Normalized gene expression in lysate (CPM)", fontsize=8)
+ax.set_ylabel("Normalized NTVE gene expression (CPM)", fontsize=8)
 ax.set_aspect("equal")
 ax.annotate(f"Pearson r: {pearson_r:.2f}\nSpearman ρ: {spearman_r:.2f}\n(non-MT genes)",
             xy=(0.05, 1.05), xycoords="axes fraction", fontsize=8)

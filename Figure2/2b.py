@@ -33,12 +33,12 @@ plt.rcParams["svg.fonttype"] = "none"
 plt.rcParams["font.size"] = 8
 
 name_mapping = {
-    "Benchmarking-S1": "NTVE",
-    "Benchmarking-S2": "HIV-gag WT",
-    "Benchmarking-S3": "TRACE-seq",
-    "Benchmarking-S4": "MMLV-gag WT",
-    "Benchmarking-S5": "HIV-gag:MCP",
-    "Benchmarking-S6": "NLuc",
+    "Benchmarking-S1": r"NTVE$_{\mathrm{PABP}}$",
+    "Benchmarking-S2": "HIV-1 Gag",
+    "Benchmarking-S3": "endogenous EVs",
+    "Benchmarking-S4": "MMLV Gag",
+    "Benchmarking-S5": r"HIV-1 Gag$_{\mathrm{MCP}}$",
+    "Benchmarking-S6": "control",
 }
 
 
@@ -46,7 +46,7 @@ def get_sample_display_name(exp_prefix: str, sample_num: int) -> str:
     key = f"{exp_prefix}-S{sample_num}"
     mapped_name = name_mapping.get(key)
     if mapped_name:
-        return f"S{sample_num}: {mapped_name}"
+        return mapped_name
     return f"S{sample_num}"
 
 
@@ -119,7 +119,7 @@ def plot_top_row_local_ranking(results, analysis_types, colors, exp_prefix, line
 
         for sample_num in sorted(results.keys()):
             result = results[sample_num][analysis_key]
-            line_label = f"{get_sample_display_name(exp_prefix, sample_num)} (AUC={result['auc']:.2f})"
+            line_label = get_sample_display_name(exp_prefix, sample_num)
             ax.plot(
                 result["quantiles"],
                 result["rates"],
@@ -134,18 +134,16 @@ def plot_top_row_local_ranking(results, analysis_types, colors, exp_prefix, line
         ax.set_xlim(-5, 105)
         ax.set_ylim(-5, 105)
         ax.grid(True, alpha=0.2)
-        ax.set_title(f"{direction.upper()}: {source_type}→{target_type}", fontweight="bold", fontsize=8)
-        ax.set_xlabel("Expression Quantile (%)", fontweight="bold", fontsize=8)
+        if direction == "top":
+            ax.set_xlabel("Cumulative gene expression percentile\n(% of highest to lowest genes)", fontsize=8)
+        else:
+            ax.set_xlabel("Cumulative gene expression percentile\n(% of lowest to highest abundant genes)", fontsize=8)
         if analysis_idx == 0:
-            ax.set_ylabel("Rediscovery Rate (%)", fontweight="bold", fontsize=8)
-        ax.legend(loc="lower right", fontsize=8, frameon=True, framealpha=0.85)
+            ax.set_ylabel("mRNA Detection Rate", fontsize=8)
+        else:
+            ax.set_ylabel("mRNA Detection Rate", fontsize=8)
+        ax.legend(loc="lower left", fontsize=7, frameon=False, ncol=2, handlelength=2.2, columnspacing=1.5, handletextpad=0.4)
 
-    fig.suptitle(
-        "Benchmarking comparison - Local Ranking Rediscovery",
-        fontsize=8,
-        fontweight="bold",
-        y=0.995,
-    )
     plt.tight_layout()
     return fig
 
@@ -196,7 +194,7 @@ elo_linewidths = {
     5: 2.0,
     6: 2.0,
 }
-analysis_types_elo = [("Lysate", "SN", "bottom"), ("Lysate", "SN", "top"), ("SN", "Lysate", "bottom"), ("SN", "Lysate", "top")]
+analysis_types_elo = [("Lysate", "SN", "top"), ("Lysate", "SN", "bottom"), ("SN", "Lysate", "bottom"), ("SN", "Lysate", "top")]
 
 print("Running benchmarking comparison per-sample rediscovery analysis (local ranking)...")
 elo_local_results = run_per_sample_analysis(elo_organized, gene_df_elo_pc, sample_name_mapping, "Lysate", "SN")

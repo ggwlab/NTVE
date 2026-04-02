@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-03-31T14:34:47.521650</dc:date>
+    <dc:date>2026-04-02T08:50:42.331052</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -47,7 +47,7 @@ C 35.735452 258.625249 44.284695 288.248261 60.392218 313.830106
 C 76.499741 339.411951 99.518176 359.924486 126.779396 372.990049 
 C 154.040617 386.055612 184.448985 391.149095 214.479788 387.680098 
 C 244.510591 384.211101 272.956881 372.319044 296.521374 353.382367 
-" clip-path="url(#pb515014852)" style="fill: #ff0000; opacity: 0.4"/>
+" clip-path="url(#pb845a3d941)" style="fill: #ff0000; opacity: 0.4"/>
    </g>
    <g id="patch_3">
     <path d="M 296.521374 103.407133 
@@ -59,7 +59,7 @@ C 316.157537 338.991566 332.128829 320.173854 343.136359 298.459612
 C 354.143889 276.745369 359.880942 252.739648 359.880942 228.39475 
 C 359.880942 204.049852 354.143889 180.044131 343.136359 158.329888 
 C 332.128829 136.615646 316.157537 117.797934 296.521374 103.407133 
-" clip-path="url(#pb515014852)" style="fill: #008000; opacity: 0.4"/>
+" clip-path="url(#pb845a3d941)" style="fill: #008000; opacity: 0.4"/>
    </g>
    <g id="patch_4">
     <path d="M 296.521374 353.382367 
@@ -75,7 +75,7 @@ C 49.961855 257.024499 57.896144 285.101867 72.880346 309.497281
 C 87.864548 333.892695 109.320455 353.664787 134.856537 366.60971 
 C 160.392619 379.554634 189.023493 385.172871 217.557891 382.8382 
 C 246.092288 380.503528 273.429127 370.306038 296.521374 353.382367 
-" clip-path="url(#pb515014852)" style="fill: #b25900; opacity: 0.4"/>
+" clip-path="url(#pb845a3d941)" style="fill: #b25900; opacity: 0.4"/>
    </g>
    <g id="text_1">
     <text style="font-size: 10px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: middle" x="42.848653" y="231.154125" transform="rotate(-0 42.848653 231.154125)">1215</text>
@@ -116,7 +116,7 @@ C 524.609355 259.461306 533.637742 289.868417 550.591479 315.901122
 C 567.545216 341.933826 591.704556 362.486939 620.117852 375.049403 
 C 648.531149 387.611866 679.992153 391.650358 710.657143 386.671478 
 C 741.322134 381.692598 769.88927 367.907717 792.868386 347.000994 
-" clip-path="url(#p0a305f9d8e)" style="fill: #ff0000; opacity: 0.4"/>
+" clip-path="url(#pd2408a113f)" style="fill: #ff0000; opacity: 0.4"/>
    </g>
    <g id="patch_6">
     <path d="M 792.868386 109.788506 
@@ -128,7 +128,7 @@ C 810.367346 332.584316 824.460867 314.472055 834.135274 293.966932
 C 843.80968 273.46181 848.82733 251.067513 848.82733 228.39475 
 C 848.82733 205.721987 843.80968 183.32769 834.135274 162.822568 
 C 824.460867 142.317445 810.367346 124.205184 792.868386 109.788506 
-" clip-path="url(#p0a305f9d8e)" style="fill: #008000; opacity: 0.4"/>
+" clip-path="url(#pd2408a113f)" style="fill: #008000; opacity: 0.4"/>
    </g>
    <g id="patch_7">
     <path d="M 792.868386 347.000994 
@@ -144,7 +144,7 @@ C 541.479778 257.526642 549.763565 286.066644 565.36073 310.671431
 C 580.957896 335.276218 603.234649 354.94597 629.581372 367.376469 
 C 655.928095 379.806968 685.274186 384.493099 714.181888 380.885904 
 C 743.089591 377.278708 770.384236 365.524765 792.868386 347.000994 
-" clip-path="url(#p0a305f9d8e)" style="fill: #b25900; opacity: 0.4"/>
+" clip-path="url(#pd2408a113f)" style="fill: #b25900; opacity: 0.4"/>
    </g>
    <g id="text_7">
     <text style="font-size: 10px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: middle" x="533.044567" y="231.154125" transform="rotate(-0 533.044567 231.154125)">1423</text>
@@ -168,10 +168,10 @@ C 743.089591 377.278708 770.384236 365.524765 792.868386 347.000994
   </g>
  </g>
  <defs>
-  <clipPath id="pb515014852">
+  <clipPath id="pb845a3d941">
    <rect x="7.2" y="39.51475" width="381.216394" height="377.76"/>
   </clipPath>
-  <clipPath id="p0a305f9d8e">
+  <clipPath id="pd2408a113f">
    <rect x="496.078754" y="39.51475" width="381.279177" height="377.76"/>
   </clipPath>
  </defs>

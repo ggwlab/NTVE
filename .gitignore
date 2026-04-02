@@ -10,9 +10,13 @@ staged_runs/
 # local workbook drafts / copies
 SupplementaryTable6_Numeric data_2.xlsx
 SupplementaryTable6_Numeric data_filled_draft.xlsx
+SourceData_NA_current_github_links.xlsx
 
 # one-off local workbook utilities
 populate_workbook_draft.py
 rewrite_workbook_links.py
 SupplementaryTable6_Numeric data.xlsx
 .*
+SourceData_NA.xlsx
+copy_source_data_with_current_github_links.py
+

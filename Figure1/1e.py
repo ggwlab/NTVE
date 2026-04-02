@@ -56,63 +56,83 @@ def create_mt_violin_plot(non_mt_df: pd.DataFrame, mt_df: pd.DataFrame, sample_m
     )
     combined["log_counts"] = np.log10(combined["read_counts"] + 1e-3)
     combined["sample_label"] = combined["sample"].map(sample_map)
+    panel_specs = [
+        (
+            r"NTVE$_{\mathrm{PABP}}$ cell line",
+            [("Stable Lysate (Avg)", "Lysate"), ("Stable Exported (Avg)", "NTVE")],
+        ),
+        (
+            "transient expression",
+            [("DJJT-cellular", "Lysate"), ("DJJT-gag", "NTVE")],
+        ),
+    ]
 
-    fig, ax = plt.subplots(figsize=(12, 6))
-    palette = {"Standard": "lightgray", "Mitochondrial": "orange"}
+    palette = {"Standard": "#d9d9d9", "Mitochondrial": "#ffae1a"}
+    fig, axes = plt.subplots(2, 1, figsize=(3.1, 4.2), sharex=True)
 
-    sns.violinplot(
-        x="sample_label",
-        y="log_counts",
-        hue="type",
-        data=combined[combined["type"] == "Standard"],
-        hue_order=["Standard", "Mitochondrial"],
-        density_norm="width",
-        bw_adjust=0.5,
-        alpha=0.3,
-        inner="box",
-        order=list(sample_map.values()),
-        palette=palette,
-        dodge=True,
-        ax=ax,
-    )
+    for ax, (panel_title, rows) in zip(axes, panel_specs):
+        panel_df = combined[combined["sample"].isin([sample for sample, _ in rows])].copy()
+        panel_df["group"] = panel_df["sample"].map(dict(rows))
+        order = ["Lysate", "NTVE"]
 
-    sns.stripplot(
-        x="sample_label",
-        y="log_counts",
-        hue="type",
-        data=combined[combined["type"] == "Mitochondrial"],
-        hue_order=["Standard", "Mitochondrial"],
-        palette=palette,
-        size=5,
-        alpha=0.7,
-        jitter=0.2,
-        order=list(sample_map.values()),
-        dodge=True,
-        ax=ax,
-    )
-
-    ax.set_title("Mitochondrial vs Nuclear Encoded Reads\nAcross Sample Types", pad=20)
-    handles, labels = ax.get_legend_handles_labels()
-    if len(handles) >= 4:
-        ax.legend(
-            [handles[0], handles[3]],
-            ["Nuclear (Violin)", "Mitochondrial (Dots)"],
-            bbox_to_anchor=(1.05, 1),
-            loc="upper left",
+        sns.violinplot(
+            data=panel_df[panel_df["type"] == "Standard"],
+            x="log_counts",
+            y="group",
+            order=order,
+            orient="h",
+            density_norm="width",
+            bw_adjust=0.5,
+            inner=None,
+            cut=0,
+            linewidth=1,
+            color=palette["Standard"],
+            ax=ax,
         )
-    else:
-        ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
 
-    ax.set_ylabel("Log10(Read Counts)")
-    ax.set_xlabel("")
-    for tick in ax.get_xticklabels():
-        tick.set_rotation(45)
-        tick.set_ha("right")
-    tick_colors = ["darkblue", "darkred"] * 2
-    for tick, color in zip(ax.get_xticklabels(), tick_colors):
-        tick.set_color(color)
+        sns.stripplot(
+            data=panel_df[panel_df["type"] == "Mitochondrial"],
+            x="log_counts",
+            y="group",
+            order=order,
+            orient="h",
+            size=4,
+            alpha=0.75,
+            jitter=0.16,
+            color=palette["Mitochondrial"],
+            edgecolor="none",
+            ax=ax,
+        )
 
-    fig.tight_layout()
+        ax.set_title(panel_title, loc="left", pad=2, fontweight="bold", fontsize=10)
+        ax.set_ylabel("")
+        ax.set_xlabel(r"Log$_{10}$ (normalized CPM)")
+        ax.grid(False)
+        ax.set_xlim(-3.7, 4.2)
+        ax.set_xticks([-3.0, -2.0, 0.0, 2.0, 4.0])
+        ax.set_xticklabels(["n.d.", "-2", "0", "2", "4"])
+        ax.tick_params(axis="y", length=3, width=1)
+        ax.invert_yaxis()
+        for spine in ax.spines.values():
+            spine.set_linewidth(1)
+
+    legend_handles = [
+        plt.Line2D([0], [0], color="#666666", lw=4),
+        plt.Line2D([0], [0], marker="o", linestyle="", markersize=5, markerfacecolor=palette["Mitochondrial"], markeredgecolor="none"),
+    ]
+    axes[0].legend(
+        legend_handles,
+        ["nuclear", "mitochondrial"],
+        loc="upper right",
+        frameon=False,
+        ncol=2,
+        handlelength=0.8,
+        handletextpad=0.4,
+        columnspacing=0.8,
+        bbox_to_anchor=(1.0, 1.42),
+    )
+
+    fig.tight_layout(h_pad=1.0)
     return fig
 
 

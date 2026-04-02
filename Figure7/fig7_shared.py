@@ -39,7 +39,7 @@ def parse_cm_name(name: str) -> tuple[int, int] | None:
     return int(match.group(1)), int(match.group(2))
 
 
-def load_cardio_reference() -> dict:
+def load_cardio_reference(include_custom_genes: bool = False) -> dict:
     gtf_data = load_gtf_df(str(GTF_PATH))
     gtf_df = gtf_data["gtf_df"]
 
@@ -62,10 +62,11 @@ def load_cardio_reference() -> dict:
         .to_dict()
     )
 
-    for custom_id, custom_name in CUSTOM_GENES.items():
-        transcript_to_gene_id[custom_id] = custom_id
-        transcript_to_gene_name[custom_id] = custom_name
-        gene_biotype_dict[custom_id] = "custom"
+    if include_custom_genes:
+        for custom_id, custom_name in CUSTOM_GENES.items():
+            transcript_to_gene_id[custom_id] = custom_id
+            transcript_to_gene_name[custom_id] = custom_name
+            gene_biotype_dict[custom_id] = "custom"
 
     return {
         "gtf_data": gtf_data,
@@ -86,8 +87,13 @@ def load_and_process_sample(
     return gene_level["NumReads"]
 
 
-def build_cardio_count_matrix(include_day10: bool = False) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
-    ref = load_cardio_reference()
+def build_cardio_count_matrix(
+    include_day10: bool = False,
+    include_custom_genes: bool = False,
+) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
+    # Default matches the original cardio spline notebooks: day 10 excluded and
+    # no explicit transcript remapping for custom construct genes.
+    ref = load_cardio_reference(include_custom_genes=include_custom_genes)
     sample_files = sorted(QUANT_DIR.glob("cm_*.sf.gz"))
     print(f"Found {len(sample_files)} cm_* quantfiles")
 

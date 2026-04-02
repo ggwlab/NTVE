@@ -32,6 +32,7 @@ OUT_DIR.mkdir(exist_ok=True)
 DATA_DICT_PATH = ROOT / "resources" / "data_dict.joblib"
 BARCODE_PATH = ROOT / "resources" / "Sample_barcode.csv"
 GTF_PATH = ROOT / "resources" / "merged_gtf_homosapiens_v108_musmusculus_v109.csv.gz"
+RANDOM_SEED = 42
 
 def main():
     print("Loading data...")
@@ -105,7 +106,7 @@ def main():
 
     sc.tl.pca(adata_sn)
     sc.pp.neighbors(adata_sn)
-    sc.tl.umap(adata_sn)
+    sc.tl.umap(adata_sn, random_state=RANDOM_SEED)
 
     # 9. Custom Plotting
     print("Generating custom UMAP plots...")

@@ -29,15 +29,19 @@ OUT_DIR.mkdir(exist_ok=True)
 # Configuration from notebook
 PADJ_THRESHOLD = 0.05
 LFC_THRESHOLD = 1.0
-SPECIAL_GENES = {'Creb1', 'Mapk8', 'Dusp1', 'Cflar'}
+
+PANEL_TITLES = {
+    2: r"NTVE$_{\mathrm{PABP}}$ sampling" + "\n" + "pre vs. post Forskolin treatment",
+    3: r"NTVE(G2A)$_{\mathrm{PABP}}$ control" + "\n" + "pre vs. post Forskolin treatment",
+    4: r"NTVE$_{\mathrm{PABP}}$" + "\n" + "pre vs. post vehicle control",
+}
 
 def cm_to_inch(cm):
     return cm / 2.54
 
 def create_volcano_plot(results_df, sample_num, output_dir, 
                        padj_threshold=PADJ_THRESHOLD, lfc_threshold=LFC_THRESHOLD,
-                       xlim=None, ylim=None, n_top_labels=10,
-                       special_genes=SPECIAL_GENES):
+                       xlim=None, ylim=None, n_top_labels=10):
     """
     Create publication-quality volcano plot.
     Matches the logic in Figure4/neuron_TP2_vs_TP3_DESeq2-Wald.ipynb
@@ -56,9 +60,6 @@ def create_volcano_plot(results_df, sample_num, output_dir,
     significant_genes = significant_genes[significant_genes['abs_log2FC'] > 1]
     significant_genes = significant_genes.sort_values(['padj', 'abs_log2FC'], ascending=[True, False])
     top_genes_to_label = significant_genes.head(n_top_labels)
-    
-    # Find special genes in the dataset
-    special_genes_to_label = df[df['GeneName'].isin(special_genes)]
     
     # Use the same figure size as the notebook
     plt.rcParams['font.family'] = 'sans-serif'
@@ -85,8 +86,6 @@ def create_volcano_plot(results_df, sample_num, output_dir,
     # Add labels for top genes (regular color)
     for _, row in top_genes_to_label.iterrows():
         gene_name = row['GeneName'] if pd.notna(row['GeneName']) else row['Gene']
-        if gene_name in special_genes:
-            continue
         ax.annotate(gene_name,
                    xy=(row['log2FoldChange'], row['-log10_padj']),
                    xytext=(5, 5),
@@ -96,21 +95,6 @@ def create_volcano_plot(results_df, sample_num, output_dir,
                    bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7, edgecolor='none'),
                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0', lw=0.5, alpha=0.5))
     
-    # Add labels for special genes in a different color (orange)
-    special_color = '#FF8C00'
-    for _, row in special_genes_to_label.iterrows():
-        gene_name = row['GeneName'] if pd.notna(row['GeneName']) else row['Gene']
-        ax.annotate(gene_name,
-                   xy=(row['log2FoldChange'], row['-log10_padj']),
-                   xytext=(5, 5),
-                   textcoords='offset points',
-                   fontsize=7,
-                   fontweight='bold',
-                   alpha=0.95,
-                   color=special_color,
-                   bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8, edgecolor=special_color, linewidth=1.5),
-                   arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0', lw=1.0, alpha=0.7, color=special_color))
-    
     ax.axhline(y=-np.log10(padj_threshold), color='black', linestyle='--', linewidth=1, alpha=0.5)
     ax.axvline(x=lfc_threshold, color='black', linestyle='--', linewidth=1, alpha=0.5)
     ax.axvline(x=-lfc_threshold, color='black', linestyle='--', linewidth=1, alpha=0.5)
@@ -119,7 +103,7 @@ def create_volcano_plot(results_df, sample_num, output_dir,
     ax.spines['right'].set_visible(False)
     ax.set_xlabel('log2 fold change (shrunken)', fontsize=10, fontweight='bold')
     ax.set_ylabel('-log10 (adjusted p-value)', fontsize=10, fontweight='bold')
-    ax.set_title(f'Sample {sample_num}: TP2 vs TP3', fontsize=11, fontweight='bold', pad=10)
+    ax.set_title(PANEL_TITLES[sample_num], fontsize=10, fontweight='bold', pad=4)
     
     if xlim is not None:
         ax.set_xlim(xlim)
