@@ -65,13 +65,13 @@ labels = ["Human", "Mouse"]
 colors = ["#c94b45ff", "#ffd21eff"]
 fig, axs = plt.subplots(2, 3, figsize=(pie_diameter_inches * 3.5, pie_diameter_inches * 2.5))
 
-for i, data in enumerate(hek_data):
+for i, (data, sample) in enumerate(zip(hek_data, hek_samples)):
     axs[0, i].pie(data, labels=labels, colors=colors, autopct="%1.1f%%", startangle=90)
-    axs[0, i].set_title(f"HEK-{i+1}")
+    axs[0, i].set_title(MAPPING[sample])
 
-for i, data in enumerate(n2a_data):
+for i, (data, sample) in enumerate(zip(n2a_data, n2a_samples)):
     axs[1, i].pie(data, labels=labels, colors=colors, autopct="%1.1f%%", startangle=90)
-    axs[1, i].set_title(f"N2a-{i+1}")
+    axs[1, i].set_title(MAPPING[sample])
 
 fig.tight_layout()
 for ext in ("svg", "png"):

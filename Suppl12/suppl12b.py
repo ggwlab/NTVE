@@ -1,7 +1,7 @@
 """
 Supplementary Figure 12b — TES-aligned coverage profiles (Benchmarking constructs)
 Standalone reproduction of Suppl12_13/coverage_absolute_tes_refactored_cleaned.ipynb
-for the Benchmarking (Elowitz) experiment.
+for the Benchmarking experiment.
 Outputs to: refactoring_roadmap/suppl12b_plots/
 """
 

@@ -49,11 +49,11 @@ PLOT_WIDTH = 3.5
 PLOT_HEIGHT = 3.5
 
 NAME_MAPPING = {
-    "Elowitz-S1": "NTVE",
-    "Elowitz-S2": "HIV-gag WT",
-    "Elowitz-S3": "TRACE-seq",
-    "Elowitz-S4": "MMLV-gag WT",
-    "Elowitz-S5": "HIV-gag:MCP",
+    "Benchmarking-S1": "NTVE",
+    "Benchmarking-S2": "HIV-gag WT",
+    "Benchmarking-S3": "TRACE-seq",
+    "Benchmarking-S4": "MMLV-gag WT",
+    "Benchmarking-S5": "HIV-gag:MCP",
     "SPAM-S1": "NTVE",
     "SPAM-S2": "HIV-gag:sPAM2 (p6)",
     "SPAM-S3": "HIV-gag:sPAM2 (NC)",
@@ -112,10 +112,10 @@ def parse_spam_sample_name(name: str):
     return None
 
 
-def parse_elowitz_sample_name(name: str):
+def parse_benchmarking_sample_name(name: str):
     match = re.match(r"(SN|Lysate)_S(\d+)_(\d+)", str(name))
     if match:
-        return {"Type": match.group(1), "Sample": int(match.group(2)), "Replicate": int(match.group(3)), "Experiment": "Elowitz"}
+        return {"Type": match.group(1), "Sample": int(match.group(2)), "Replicate": int(match.group(3)), "Experiment": "Benchmarking"}
     return None
 
 
@@ -209,10 +209,10 @@ def export_curve_tables(experiment: str, coverage_stats_by_type: dict[str, dict[
 
 
 def compute_ratio_stats(experiment: str) -> dict[int, dict]:
-    lysate_type = "Lysate" if experiment == "Elowitz" else "L"
+    lysate_type = "Lysate" if experiment == "Benchmarking" else "L"
     ratios: dict[int, dict] = {}
 
-    for sample_num in range(1, 6):
+    for sample_num in PANEL_B_SAMPLES:
         sn_key = (experiment, "SN", sample_num)
         lysate_key = (experiment, lysate_type, sample_num)
         if sn_key not in sample_groups or lysate_key not in sample_groups:
@@ -287,7 +287,7 @@ all_samples = [row[0] for row in cursor.fetchall()]
 conn.close()
 for sample_id in all_samples:
     if sample_id not in sample_metadata:
-        parsed = parse_elowitz_sample_name(sample_id)
+        parsed = parse_benchmarking_sample_name(sample_id)
         if parsed:
             sample_metadata[sample_id] = parsed
 
@@ -324,13 +324,15 @@ for sample_id in all_sample_ids:
         meta = sample_metadata[sample_id]
         sample_groups[(meta["Experiment"], meta["Type"], meta["Sample"])] .append(sample_id)
 
+PANEL_B_SAMPLES = [1, 2, 4, 5]  # NTVE, HIV:sPAM p6, HIV-gag WT, mini-gag:PABP
+
 coverage_stats = {}
-for experiment in ["Elowitz", "SPAM"]:
+for experiment in ["Benchmarking", "SPAM"]:
     coverage_stats[experiment] = {}
-    sample_types = ["SN", "Lysate"] if experiment == "Elowitz" else ["SN", "L"]
+    sample_types = ["SN", "Lysate"] if experiment == "Benchmarking" else ["SN", "L"]
     for sample_type in sample_types:
         coverage_stats[experiment][sample_type] = {}
-        for sample_num in range(1, 6):
+        for sample_num in PANEL_B_SAMPLES:
             group_key = (experiment, sample_type, sample_num)
             if group_key not in sample_groups:
                 continue
@@ -434,9 +436,9 @@ def _draw_ratio_panel(ax: plt.Axes, stats: dict[int, dict], experiment: str, tit
 
 def plot_spam_combined(ratio_stats: dict[int, dict]) -> None:
     fig, axes = plt.subplots(1, 3, figsize=(10.5, 3.6), sharex=True)
-    _draw_coverage_panel(axes[0], coverage_stats["SPAM"]["L"], "SPAM", "L", "SPAM L")
-    _draw_coverage_panel(axes[1], coverage_stats["SPAM"]["SN"], "SPAM", "SN", "SPAM SN")
-    _draw_ratio_panel(axes[2], ratio_stats, "SPAM", "SPAM SN/L ratio")
+    _draw_coverage_panel(axes[0], coverage_stats["SPAM"]["L"], "SPAM", "L", "Lysate")
+    _draw_coverage_panel(axes[1], coverage_stats["SPAM"]["SN"], "SPAM", "SN", "Supernatant")
+    _draw_ratio_panel(axes[2], ratio_stats, "SPAM", "ratio")
     handles, labels = axes[2].get_legend_handles_labels()
     fig.legend(handles, labels, loc="center left", bbox_to_anchor=(0.99, 0.5), fontsize=7, framealpha=0.95)
     fig.tight_layout(rect=[0, 0, 0.92, 1])
