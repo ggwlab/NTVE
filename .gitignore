@@ -11,6 +11,7 @@ staged_runs/
 SupplementaryTable6_Numeric data_2.xlsx
 SupplementaryTable6_Numeric data_filled_draft.xlsx
 SourceData_NA_current_github_links.xlsx
+side_by_side/
 
 # one-off local workbook utilities
 populate_workbook_draft.py
@@ -19,4 +20,3 @@ SupplementaryTable6_Numeric data.xlsx
 .*
 SourceData_NA.xlsx
 copy_source_data_with_current_github_links.py
-
