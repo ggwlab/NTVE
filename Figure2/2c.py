@@ -231,79 +231,144 @@ def add_value_dots(ax, x_center, values, width, color):
 
 
 def plot_correlation_by_length(results, bin_labels, experiment_name, source_type, target_type, save_filename=None):
-    sample_numbers = sorted(results.keys())
-    fig, axes = plt.subplots(1, len(sample_numbers), figsize=(4 * len(sample_numbers), 5))
-    if len(sample_numbers) == 1:
-        axes = np.array([axes])
+    # 2×3 grid: row 0 = [S1, S2, S3], row 1 = [S5, S4, S6]
+    layout = [[1, 2, 3], [5, 4, 6]]
+    nrows, ncols = 2, 3
 
-    x_pos = np.arange(len(bin_labels))
-    width = 0.6
+    panel_config = {
+        1: dict(
+            title="NTVE$_{PABP}$",
+            banner="HIV-1 Gag\npoly(A)-tail / PABP",
+            color="#7EB8D9",
+            left_anno=True,
+        ),
+        2: dict(
+            title="this publication",
+            banner="HIV-1 Gag\nunspecific",
+            color="#A39CC8",
+            left_anno=False,
+        ),
+        3: dict(
+            title="TRACE-seq",
+            banner="endogenous EVs\n5\u2019 cap / EIF4E + YTHDF1",
+            color="#E8927A",
+            left_anno=False,
+        ),
+        5: dict(
+            title="COURIER",
+            banner="HIV-1 Gag-MCP\nunspecific/MCP",
+            color="#74B874",
+            left_anno=True,
+        ),
+        4: dict(
+            title="COURIER",
+            banner="MMLV Gag\nunspecific",
+            color="#B3DBA3",
+            left_anno=False,
+        ),
+        6: dict(
+            title="transfection control",
+            banner="transfection\ncontrol",
+            color="#F4C48C",
+            left_anno=False,
+        ),
+    }
 
-    exp_prefix = None
-    if "Spam" in experiment_name or "SPAM" in experiment_name:
-        exp_prefix = "SPAM"
-    elif "Elo" in experiment_name or "Benchmarking" in experiment_name:
-        exp_prefix = "Benchmarking"
-
-    # First pass: determine global max for n_transcripts to set consistent y-axis
+    # First pass: determine global max for n_transcripts
     max_n_transcripts = 0
-    for sample_num in sample_numbers:
+    for sample_num in results:
         for bin_label in bin_labels:
             if bin_label in results[sample_num]:
                 n_transcripts = results[sample_num][bin_label].get("n_transcripts", 0)
                 max_n_transcripts = max(max_n_transcripts, n_transcripts)
 
-    for sample_idx, sample_num in enumerate(sample_numbers):
-        spearman_means = []
-        spearman_stds = []
-        n_transcripts_list = []
-        spearman_value_sets = []
+    fig, axes = plt.subplots(nrows, ncols, figsize=(13, 9))
+    plt.subplots_adjust(hspace=0.6, wspace=0.55, top=0.88, bottom=0.10, left=0.08, right=0.95)
 
-        for bin_label in bin_labels:
-            if bin_label in results[sample_num]:
-                data = results[sample_num][bin_label]
-                spearman_means.append(data["spearman_r_mean"])
-                spearman_stds.append(data["spearman_r_std"])
-                n_transcripts_list.append(data.get("n_transcripts", 0))
-                spearman_value_sets.append(data.get("spearman_r_values", []))
-            else:
-                spearman_means.append(np.nan)
-                spearman_stds.append(np.nan)
-                n_transcripts_list.append(0)
-                spearman_value_sets.append([])
+    x_pos = np.arange(len(bin_labels))
+    width = 0.6
 
-        # Get sample name from mapping
-        if exp_prefix:
-            sample_key = f"{exp_prefix}-S{sample_num}"
-            sample_title = name_mapping.get(sample_key, f"Sample {sample_num}")
-        else:
-            sample_title = f"Sample {sample_num}"
+    for row_idx, row in enumerate(layout):
+        for col_idx, sample_num in enumerate(row):
+            ax = axes[row_idx, col_idx]
+            cfg = panel_config.get(sample_num, {})
 
-        ax = axes[sample_idx]
-        ax.bar(x_pos, spearman_means, width, alpha=0.8, color="darkgrey")
+            if sample_num not in results:
+                ax.set_visible(False)
+                continue
 
-        for idx, values in enumerate(spearman_value_sets):
-            if len(values) > 2 and np.isfinite(spearman_means[idx]) and np.isfinite(spearman_stds[idx]):
-                ax.errorbar(x_pos[idx], spearman_means[idx], yerr=spearman_stds[idx], fmt="none", ecolor="black", elinewidth=0.5, capsize=5, zorder=5)
-            add_value_dots(ax, x_pos[idx], values, width, "black")
-        ax.set_xlabel("Transcript Length", fontsize=11)
-        ax.set_ylabel("Correlation Coefficient", fontsize=11)
-        ax.set_title(sample_title, fontsize=12, fontweight="bold")
-        ax.set_xticks(x_pos)
-        ax.set_xticklabels(bin_labels, rotation=45, ha="right")
-        ax.grid(True, alpha=0.3, axis="y")
-        ax.set_ylim(0, 1)
+            spearman_means, spearman_stds, n_transcripts_list, spearman_value_sets = [], [], [], []
+            for bin_label in bin_labels:
+                if bin_label in results[sample_num]:
+                    data = results[sample_num][bin_label]
+                    spearman_means.append(data["spearman_r_mean"])
+                    spearman_stds.append(data["spearman_r_std"])
+                    n_transcripts_list.append(data.get("n_transcripts", 0))
+                    spearman_value_sets.append(data.get("spearman_r_values", []))
+                else:
+                    spearman_means.append(np.nan)
+                    spearman_stds.append(np.nan)
+                    n_transcripts_list.append(0)
+                    spearman_value_sets.append([])
 
-        # Add second y-axis for number of transcripts
-        ax2 = ax.twinx()
-        ax2.plot(x_pos, n_transcripts_list, color="darkgreen", marker="o", linewidth=2, markersize=6, label="# Transcripts", alpha=0.7)
-        ax2.set_ylabel("Number of Transcripts", fontsize=11, color="darkgreen")
-        ax2.tick_params(axis="y", labelcolor="darkgreen")
-        ax2.set_ylim(0, max_n_transcripts * 1.1)  # Add 10% padding
-        ax2.legend(loc="upper right")
+            ax.bar(x_pos, spearman_means, width, alpha=0.8, color="darkgrey")
 
-    fig.suptitle(f"{experiment_name}: {source_type}/{target_type} Spearman Correlation by Transcript Length", fontsize=14, fontweight="bold", y=0.995)
-    plt.tight_layout()
+            for idx, values in enumerate(spearman_value_sets):
+                if len(values) > 2 and np.isfinite(spearman_means[idx]) and np.isfinite(spearman_stds[idx]):
+                    ax.errorbar(x_pos[idx], spearman_means[idx], yerr=spearman_stds[idx], fmt="none", ecolor="black", elinewidth=0.5, capsize=5, zorder=5)
+                add_value_dots(ax, x_pos[idx], values, width, "black")
+
+            ax.set_xlabel("Transcript Length", fontsize=PLOT_FONT_SIZE)
+            ax.set_ylabel("Spearman correlation coefficient", fontsize=PLOT_FONT_SIZE)
+            ax.set_xticks(x_pos)
+            ax.set_xticklabels(bin_labels, rotation=45, ha="right", fontsize=PLOT_FONT_SIZE - 1)
+            ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+            ax.tick_params(axis="y", labelsize=PLOT_FONT_SIZE - 1)
+            ax.grid(True, alpha=0.3, axis="y")
+            ax.set_ylim(0, 1.0)
+
+            # Bold panel title inside (upper left)
+            ax.text(0.05, 0.97, cfg.get("title", ""), transform=ax.transAxes,
+                    fontsize=PLOT_FONT_SIZE + 1, fontweight="bold", va="top", ha="left")
+
+            # Right y-axis: number of transcripts
+            ax2 = ax.twinx()
+            ax2.plot(x_pos, n_transcripts_list, color="darkgreen", marker="o",
+                     linewidth=2, markersize=5, alpha=0.7)
+            ax2.set_ylabel("Number of transcripts", fontsize=PLOT_FONT_SIZE, color="darkgreen")
+            ax2.tick_params(axis="y", labelcolor="darkgreen", labelsize=PLOT_FONT_SIZE - 1)
+            ax2.set_ylim(0, max_n_transcripts * 1.1)
+
+            # Colored banner above the panel
+            banner_text = cfg.get("banner", "")
+            banner_color = cfg.get("color", "#DDDDDD")
+            ax.annotate(
+                banner_text,
+                xy=(0.5, 1.0),
+                xycoords="axes fraction",
+                xytext=(0.5, 1.03),
+                textcoords="axes fraction",
+                ha="center", va="bottom",
+                fontsize=PLOT_FONT_SIZE - 1,
+                clip_on=False,
+                annotation_clip=False,
+                bbox=dict(boxstyle="round,pad=0.3", facecolor=banner_color, edgecolor="none", alpha=0.9),
+            )
+
+            # "budding module / RNA motif/binder" label for first column
+            if cfg.get("left_anno", False):
+                ax.annotate(
+                    "budding module\nRNA motif/binder",
+                    xy=(0.0, 1.0),
+                    xycoords="axes fraction",
+                    xytext=(-0.02, 1.10),
+                    textcoords="axes fraction",
+                    ha="right", va="bottom",
+                    fontsize=PLOT_FONT_SIZE - 2,
+                    clip_on=False,
+                    annotation_clip=False,
+                    color="#444444",
+                )
 
     if save_filename:
         output_path = os.path.join(PLOT_OUTPUT_DIR, save_filename)
