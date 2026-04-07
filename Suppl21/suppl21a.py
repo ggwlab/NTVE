@@ -78,20 +78,40 @@ def load_marker_matrix() -> pd.DataFrame:
     return log_df.sub(log_df.mean(axis=1), axis=0)
 
 
-def draw_heatmap(ax: plt.Axes, data: pd.DataFrame, title: str, show_xlabels: bool) -> plt.AxesImage:
+def draw_heatmap_rows(fig: plt.Figure, subplotspec, data: pd.DataFrame, title: str, first_ax=None) -> tuple:
+    """One axes per row so each row is a separate <g> in the SVG."""
     vmin, vmax = -1.5, 1.5
-    im = ax.imshow(data.values, aspect="auto", cmap="RdBu_r", vmin=vmin, vmax=vmax)
-    ax.set_yticks(range(len(data.index)))
-    ax.set_yticklabels(data.index, fontsize=8, fontstyle="italic")
-    ax.set_xticks(range(len(DAYS)))
-    ax.set_xticklabels([f"d{d}" for d in DAYS] if show_xlabels else [], fontsize=8)
-    ax.tick_params(length=0)
-    ax.set_title(title, fontsize=10, weight="bold", pad=8)
-    for x in range(len(DAYS) + 1):
-        ax.axvline(x - 0.5, color="#999999", lw=0.6, ls=(0, (2, 2)), zorder=0)
-    for spine in ax.spines.values():
-        spine.set_edgecolor("#cccccc")
-    return im
+    n_rows, n_cols = len(data.index), len(data.columns)
+    inner_gs = subplotspec.subgridspec(n_rows, 1, hspace=0)
+    axes = []
+    im = None
+    for i, gene in enumerate(data.index):
+        share = axes[0] if i > 0 else first_ax
+        ax = fig.add_subplot(inner_gs[i], sharex=share)
+        im = ax.imshow(
+            data.iloc[[i]].values,
+            aspect="auto",
+            cmap="RdBu_r",
+            vmin=vmin,
+            vmax=vmax,
+            extent=[-0.5, n_cols - 0.5, -0.5, 0.5],
+            interpolation="nearest",
+        )
+        ax.set_xlim(-0.5, n_cols - 0.5)
+        ax.set_ylim(-0.5, 0.5)
+        ax.set_yticks([0])
+        ax.set_yticklabels([gene], fontsize=8, fontstyle="italic")
+        ax.set_xticks(range(n_cols))
+        ax.set_xticklabels([])
+        ax.tick_params(length=0)
+        for x in range(n_cols + 1):
+            ax.axvline(x - 0.5, color="#999999", lw=0.6, ls=(0, (2, 2)), zorder=0)
+        for spine in ax.spines.values():
+            spine.set_edgecolor("#cccccc")
+        if i == 0:
+            ax.set_title(title, fontsize=10, weight="bold", pad=8)
+        axes.append(ax)
+    return axes, im
 
 
 def main() -> None:
@@ -100,17 +120,19 @@ def main() -> None:
     meso = marker_df.loc[[g for g in MESODERM_MARKERS if g in marker_df.index]]
     cardio = marker_df.loc[[g for g in CARDIAC_MARKERS if g in marker_df.index]]
 
+    n_meso, n_cardio = len(meso), len(cardio)
     fig = plt.figure(figsize=(9.0, 4.2))
-    gs = GridSpec(3, 2, figure=fig, width_ratios=[0.06, 1.0], height_ratios=[0.9, 0.55, 0.35], wspace=0.28, hspace=0.45)
+    gs = GridSpec(
+        3, 2, figure=fig,
+        width_ratios=[0.06, 1.0],
+        height_ratios=[n_meso, n_cardio, 2.2],
+        wspace=0.28, hspace=0.45,
+    )
     ax_scale = fig.add_subplot(gs[0:2, 0])
-    ax_top = fig.add_subplot(gs[0, 1])
-    ax_bottom = fig.add_subplot(gs[1, 1], sharex=ax_top)
-    ax_timeline = fig.add_subplot(gs[2, 1], sharex=ax_top)
+    ax_timeline = fig.add_subplot(gs[2, 1])  # sharex set after meso_axes exists
 
-    im = draw_heatmap(ax_top, meso, "Mesodermal marker genes quantified by NTVE", show_xlabels=False)
-    draw_heatmap(ax_bottom, cardio, "Cardiac marker genes quantified by NTVE", show_xlabels=False)
-    plt.setp(ax_top.get_xticklabels(), visible=False)
-    plt.setp(ax_bottom.get_xticklabels(), visible=False)
+    meso_axes, im = draw_heatmap_rows(fig, gs[0, 1], meso, "Mesodermal marker genes quantified by NTVE")
+    cardio_axes, _ = draw_heatmap_rows(fig, gs[1, 1], cardio, "Cardiac marker genes quantified by NTVE", first_ax=meso_axes[0])
 
     cbar = plt.colorbar(im, cax=ax_scale)
     cbar.ax.tick_params(labelsize=8)
