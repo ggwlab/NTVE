@@ -75,7 +75,7 @@ MIN_GENE_SET_SIZE = 15
 MAX_GENE_SET_SIZE = 500
 FGSEA_IMAGE = "fgsea:latest"
 FGSEA_DOCKER_DIR = ROOT / "resources" / "docker_fgsea"
-TOP_N_PER_DAY = 3
+TOP_N_GLOBAL = 20
 
 RANKINGS_CSV = OUT_DATA / "all_gene_rankings_log2_centered.csv"
 DESEQ2_CSV = ROOT / "Figure7" / "cardio_deseq2_cubicsplines_output" / "deseq2_results.csv"
@@ -262,32 +262,25 @@ def _pathway_to_label(pathway: str) -> str:
 def plot_panel_b(c5: pd.DataFrame) -> None:
     days = list(range(10))
 
-    # Collect all top-N significant hits per day to determine rows dynamically
-    all_hits: list[dict] = []
-    for day in days:
-        day_hits = (
-            c5[(c5["timepoint"] == day) & (c5["padj"] < 0.05)]
-            .sort_values("pval")
-            .head(TOP_N_PER_DAY)
-        )
-        for rank_within_day, (_, row) in enumerate(day_hits.iterrows(), start=1):
-            all_hits.append({
-                "day": day,
-                "rank_within_day": rank_within_day,
-                "pathway": row["pathway"],
-                "pval": row["pval"],
-                "padj": row["padj"],
-                "NES": row["NES"],
-            })
-
-    # Rows = unique pathways that appear in any day's top hits, ordered by first appearance
+    # Top-N rows globally by pval define both which rows appear and which cells get a symbol
+    top_global = c5.sort_values("pval").head(TOP_N_GLOBAL)
     seen: dict[str, str] = {}
-    for h in all_hits:
-        p = h["pathway"]
+    for _, row in top_global.iterrows():
+        p = row["pathway"]
         if p not in seen:
             seen[p] = _pathway_to_label(p)
     row_labels = list(seen.values())
     pathway_to_label_map = seen
+
+    all_hits: list[dict] = []
+    for _, row in top_global.iterrows():
+        all_hits.append({
+            "day": int(row["timepoint"]),
+            "pathway": row["pathway"],
+            "pval": row["pval"],
+            "padj": row["padj"],
+            "NES": row["NES"],
+        })
 
     fig, ax = plt.subplots(figsize=(8.4, max(3.4, len(row_labels) * 0.4)))
     ax.set_xlim(-0.6, len(days) - 0.4)
@@ -318,7 +311,6 @@ def plot_panel_b(c5: pd.DataFrame) -> None:
         )
         selected_rows.append({
             "day": h["day"],
-            "rank_within_day": h["rank_within_day"],
             "pathway": pathway,
             "label": label,
             "pval": h["pval"],
