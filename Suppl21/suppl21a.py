@@ -31,7 +31,7 @@ CARDIO_PKL = ROOT / "resources" / "cardio_data.pkl"
 MESODERM_MARKERS = ["TBXT", "PDGFRA", "MESP1", "HAND1", "CDH2", "HAND2"]
 CARDIAC_MARKERS = ["NKX2-5", "ACTN2", "TNNT2"]
 DAYS = list(range(10))
-PSEUDOCOUNT = 1
+PSEUDOCOUNT = 0.1
 
 
 def save(fig: plt.Figure, stem: str) -> None:
@@ -114,7 +114,7 @@ def main() -> None:
 
     cbar = plt.colorbar(im, cax=ax_scale)
     cbar.ax.tick_params(labelsize=8)
-    cbar.set_label("log\u2081\u2080(TPM+1\u2212Mean)", fontsize=8, labelpad=4)
+    cbar.set_label(f"log\u2081\u2080(TPM+{PSEUDOCOUNT}\u2212Mean)", fontsize=8, labelpad=4)
     ax_scale.yaxis.set_label_position("left")
 
     ax_timeline.set_xlim(-0.5, len(DAYS) - 0.5)
