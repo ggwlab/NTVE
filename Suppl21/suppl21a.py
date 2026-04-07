@@ -31,7 +31,7 @@ CARDIO_PKL = ROOT / "resources" / "cardio_data.pkl"
 MESODERM_MARKERS = ["TBXT", "PDGFRA", "MESP1", "HAND1", "CDH2", "HAND2"]
 CARDIAC_MARKERS = ["NKX2-5", "ACTN2", "TNNT2"]
 DAYS = list(range(10))
-PSEUDOCOUNT = 0.1
+PSEUDOCOUNT = 1
 
 
 def save(fig: plt.Figure, stem: str) -> None:
@@ -74,7 +74,7 @@ def load_marker_matrix() -> pd.DataFrame:
 
     marker_df = pd.DataFrame(rows, index=labels, columns=DAYS)
     print("Markers included:", list(marker_df.index))
-    log_df = np.log2(marker_df + PSEUDOCOUNT)
+    log_df = np.log10(marker_df + PSEUDOCOUNT)
     return log_df.sub(log_df.mean(axis=1), axis=0)
 
 
@@ -100,8 +100,8 @@ def main() -> None:
     meso = marker_df.loc[[g for g in MESODERM_MARKERS if g in marker_df.index]]
     cardio = marker_df.loc[[g for g in CARDIAC_MARKERS if g in marker_df.index]]
 
-    fig = plt.figure(figsize=(8.2, 3.8))
-    gs = GridSpec(3, 2, figure=fig, width_ratios=[0.08, 1.0], height_ratios=[0.9, 0.55, 0.35], wspace=0.18, hspace=0.35)
+    fig = plt.figure(figsize=(9.0, 4.2))
+    gs = GridSpec(3, 2, figure=fig, width_ratios=[0.06, 1.0], height_ratios=[0.9, 0.55, 0.35], wspace=0.28, hspace=0.45)
     ax_scale = fig.add_subplot(gs[0:2, 0])
     ax_top = fig.add_subplot(gs[0, 1])
     ax_bottom = fig.add_subplot(gs[1, 1], sharex=ax_top)
@@ -109,10 +109,13 @@ def main() -> None:
 
     im = draw_heatmap(ax_top, meso, "Mesodermal marker genes quantified by NTVE", show_xlabels=False)
     draw_heatmap(ax_bottom, cardio, "Cardiac marker genes quantified by NTVE", show_xlabels=False)
+    plt.setp(ax_top.get_xticklabels(), visible=False)
+    plt.setp(ax_bottom.get_xticklabels(), visible=False)
 
     cbar = plt.colorbar(im, cax=ax_scale)
     cbar.ax.tick_params(labelsize=8)
-    cbar.set_label("log2(TPM+0.1) - mean", fontsize=8)
+    cbar.set_label("log\u2081\u2080(TPM+1\u2212Mean)", fontsize=8, labelpad=4)
+    ax_scale.yaxis.set_label_position("left")
 
     ax_timeline.set_xlim(-0.5, len(DAYS) - 0.5)
     ax_timeline.set_ylim(0, 1)
