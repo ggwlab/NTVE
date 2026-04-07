@@ -324,7 +324,7 @@ for sample_id in all_sample_ids:
         meta = sample_metadata[sample_id]
         sample_groups[(meta["Experiment"], meta["Type"], meta["Sample"])] .append(sample_id)
 
-PANEL_B_SAMPLES = [1, 2, 4, 5]  # NTVE, HIV:sPAM p6, HIV-gag WT, mini-gag:PABP
+PANEL_B_SAMPLES = [1, 3, 4, 5]  # NTVE, HIV:sPAM NC, HIV-gag WT, mini-gag:PABP
 
 coverage_stats = {}
 for experiment in ["Benchmarking", "SPAM"]:

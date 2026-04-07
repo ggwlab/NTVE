@@ -403,7 +403,7 @@ spam_corr_results_matched, spam_bins_matched = analyze_correlation_by_length(
 )
 print(f"✓ Processed {len(spam_corr_results_matched)} Spam samples")
 
-PANEL_A_SAMPLES = [1, 2, 5, 6]  # NTVE, HIV:sPAM p6, mini-gag:PABP, NLuc
+PANEL_A_SAMPLES = [1, 3, 5, 6]  # NTVE, HIV:sPAM NC, mini-gag:PABP, NLuc
 spam_corr_results_panel = {k: spam_corr_results_matched[k] for k in PANEL_A_SAMPLES if k in spam_corr_results_matched}
 
 print("Creating Spam correlation plots (1000bp bins, matched replicates)...")
