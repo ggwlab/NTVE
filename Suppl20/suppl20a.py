@@ -78,9 +78,20 @@ def analyze_homo_sapiens_hits(blast_output_file: Path) -> dict:
         if "homo sapiens" not in subject_title:
             continue
         hit_type = "other"
-        if "ribosomal rna" in subject_title or "rrna" in subject_title:
+        if (
+            "ribosomal rna" in subject_title
+            or "rrna" in subject_title
+            or "18s" in subject_title
+            or "28s" in subject_title
+            or "5.8s" in subject_title
+            or "5s ribosomal" in subject_title
+        ):
             hit_type = "rrna"
-        elif "mrna" in subject_title or "transcript variant" in subject_title:
+        elif (
+            "mrna" in subject_title
+            or "messenger rna" in subject_title
+            or "transcript variant" in subject_title
+        ):
             hit_type = "mrna"
         query_hits.setdefault(query_id, []).append(hit_type)
 
@@ -170,29 +181,14 @@ for sample in samples:
     categories = ["Accepted", "Rejected"]
     x = np.arange(len(categories))
     width = 0.5
-    fig, axes = plt.subplots(1, 2, figsize=(6, 3))
-    fig.suptitle(f"Quality Metrics Comparison: {sample}", fontsize=10, fontweight="bold")
-
     acc_total = sample_data["accepted"]["total"]
     rej_total = sample_data["rejected"]["total"]
-    acc_hits_pct = (sample_data["accepted"]["with_hits"] / acc_total * 100) if acc_total else 0
     acc_nohits_pct = (sample_data["accepted"]["no_hits"] / acc_total * 100) if acc_total else 0
-    rej_hits_pct = (sample_data["rejected"]["with_hits"] / rej_total * 100) if rej_total else 0
     rej_nohits_pct = (sample_data["rejected"]["no_hits"] / rej_total * 100) if rej_total else 0
 
-    ax1 = axes[0]
-    ax1.bar(x, [acc_hits_pct, rej_hits_pct], width, label="With BLAST hits", color="#2ecc71")
-    ax1.bar(x, [acc_nohits_pct, rej_nohits_pct], width, bottom=[acc_hits_pct, rej_hits_pct], label="No BLAST hits\n(nonsensical)", color="#e74c3c")
-    ax1.set_ylabel("Percentage (%)", fontsize=8)
-    ax1.set_title("BLAST Hit Rate", fontsize=8, fontweight="bold")
-    ax1.set_xticks(x)
-    ax1.set_xticklabels(categories, fontsize=8)
-    ax1.set_ylim(0, 100)
-    ax1.legend(loc="upper right", fontsize=7)
-    ax1.grid(axis="y", alpha=0.3)
-    ax1.tick_params(labelsize=8)
+    fig, ax = plt.subplots(figsize=(3, 3))
+    fig.suptitle(f"Relative Composition: {sample}", fontsize=10, fontweight="bold")
 
-    ax2 = axes[1]
     acc_mrna_pct = (sample_data["accepted"]["hs_mrna"] / acc_total * 100) if acc_total else 0
     acc_rrna_pct = (sample_data["accepted"]["hs_rrna"] / acc_total * 100) if acc_total else 0
     acc_hs_other_pct = (sample_data["accepted"]["hs_other"] / acc_total * 100) if acc_total else 0
@@ -207,22 +203,22 @@ for sample in samples:
     hs_other_pct = [acc_hs_other_pct, rej_hs_other_pct]
     non_hs_pct = [acc_non_hs_pct, rej_non_hs_pct]
     nohit_pct = [acc_nohits_pct, rej_nohits_pct]
-    ax2.bar(x, mrna_pct, width, label="H. sapiens mRNA", color="#2ecc71")
-    ax2.bar(x, rrna_pct, width, bottom=mrna_pct, label="H. sapiens rRNA", color="#9b59b6")
+    ax.bar(x, mrna_pct, width, label="H. sapiens mRNA", color="#2ecc71")
+    ax.bar(x, rrna_pct, width, bottom=mrna_pct, label="H. sapiens rRNA", color="#9b59b6")
     bottom2 = np.array(mrna_pct) + np.array(rrna_pct)
-    ax2.bar(x, hs_other_pct, width, bottom=bottom2, label="H. sapiens other", color="#f39c12")
+    ax.bar(x, hs_other_pct, width, bottom=bottom2, label="H. sapiens other", color="#f39c12")
     bottom3 = bottom2 + np.array(hs_other_pct)
-    ax2.bar(x, non_hs_pct, width, bottom=bottom3, label="Non-H. sapiens", color="#95a5a6")
+    ax.bar(x, non_hs_pct, width, bottom=bottom3, label="Non-H. sapiens", color="#95a5a6")
     bottom4 = bottom3 + np.array(non_hs_pct)
-    ax2.bar(x, nohit_pct, width, bottom=bottom4, label="No BLAST hits", color="#e74c3c")
-    ax2.set_ylabel("Percentage (%)", fontsize=8)
-    ax2.set_title("Relative Composition", fontsize=8, fontweight="bold")
-    ax2.set_xticks(x)
-    ax2.set_xticklabels(categories, fontsize=8)
-    ax2.set_ylim(0, 100)
-    ax2.legend(loc="upper right", fontsize=7)
-    ax2.grid(axis="y", alpha=0.3)
-    ax2.tick_params(labelsize=8)
+    ax.bar(x, nohit_pct, width, bottom=bottom4, label="No BLAST hits", color="#e74c3c")
+    ax.set_ylabel("Percentage (%)", fontsize=8)
+    ax.set_title("Relative Composition", fontsize=8, fontweight="bold")
+    ax.set_xticks(x)
+    ax.set_xticklabels(categories, fontsize=8)
+    ax.set_ylim(0, 100)
+    ax.legend(loc="upper right", fontsize=7)
+    ax.grid(axis="y", alpha=0.3)
+    ax.tick_params(labelsize=8)
     fig.tight_layout()
     save(fig, f"{sample}_quality_comparison")
     if sample == canonical_sample:
